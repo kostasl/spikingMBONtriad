@@ -1,14 +1,15 @@
-/*
-############## POISSON SOURCE #########################################
-# Implements a spike event source timing trigger, where on each simulation step 
-# the source returns if a spike occured stochastically according to a poisson distribution
-# parametarised by lamda (ë) the rate of spike occurance in Hz (no of spikes per second). 
-# The probability of each event is exponentially distributed in time.
-# Kostantinos Lagogiannis 07/2007
-########################################################################
-*/
+///*
+/// \class PoissonSource
+/// \brief Implements a spike event source timing trigger, where on each simulation step
+/// the source returns if a spike occured stochastically according to a poisson distribution
+/// parametarised by lamda (ë) the rate of spike occurance in Hz (no of spikes per second).
+/// The probability of each event is exponentially distributed in time.
+/// \author Kostantinos Lagogiannis
+/// \date 07/2007
 
-#include "StdAfx.h"
+
+#include "stdafx.h"
+#include "math.h"
 #include "PoissonSource.h"
 
 PoissonSource::PoissonSource(int lamda,float timeStep,double noiseStdev)

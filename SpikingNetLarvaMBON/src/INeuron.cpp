@@ -1,39 +1,41 @@
-#include "StdAfx.h"
+#include "stdafx.h"
+#include "isynapse.h"
+#include "isynapseensemble.h"
 #include "INeuron.h"
 
 
-//Abstract Class
+////Abstract Class
 INeuron::INeuron(void)
 {
 }
 
-int INeuron::getID()
-{
-	return 0;
-}
+//int INeuron::getID()
+//{
+//	return 0;
+//}
 
-void INeuron::RegisterAfferent(synapseEnsemble* s)
-{
-}
-void INeuron::SpikeArrived(synapticTransmission* s)
-{
-	//Abstract
-}
+//void INeuron::RegisterAfferent(ISynapseEnsemble* s)
+//{
+//}
+//void INeuron::SpikeArrived(synapticTransmission* s)
+//{
+//	//Abstract
+//}
 
-void INeuron::ActionPotentialEvent()
-{
-}
+//void INeuron::ActionPotentialEvent()
+//{
+//}
 
-//Should be made virtual and implemented by each Neuron Class to step simulation time
-//Not implemented
-void INeuron::StepSimTime()
-{
-}
+////Should be made virtual and implemented by each Neuron Class to step simulation time
+////Not implemented
+//void INeuron::StepSimTime()
+//{
+//}
 
-unsigned short INeuron::getFireRate()
-{
-return 0;
-}
+//unsigned short INeuron::getFireRate()
+//{
+//return 0;
+//}
 
 
 

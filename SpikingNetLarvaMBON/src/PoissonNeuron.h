@@ -1,7 +1,9 @@
 #pragma once
-#include "ineuron.h"
+#include "INeuron.h"
+#include "isynapseensemble.h"
+
 //Fwd Declaration
-class synapseEnsemble; //Fwd Declaration
+//class synapseEnsemble; //Fwd Declaration
 class synapticTransmission;
 //class INeuron;
 
@@ -11,7 +13,7 @@ class PoissonNeuron:
 {
 public:
 	PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
-	void RegisterAfferent(synapseEnsemble* s); //adds Afferent to array and registers target neuron with it
+    void RegisterAfferent(ISynapseEnsemble* s); //adds Afferent to array and registers target neuron with it
 	void SpikeArrived(synapticTransmission* s); //Called by SynapseEnsemble
 	bool StepDrawSpike();
 	void ActionPotentialEvent(); //Called when neuron reaches threshold
@@ -28,7 +30,7 @@ private:
 	float mfPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
 	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
 	unsigned short msLastFireRate; //The number of spikes during the last second
-	synapseEnsemble* mSynapses[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
+    ISynapseEnsemble* mSynapses[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
 	unsigned int iLastSynapseIndex;
 	bool mbFixedRate;
 	time_t t; //Used for random num generation

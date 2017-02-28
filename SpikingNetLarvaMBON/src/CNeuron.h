@@ -26,7 +26,7 @@ public:
 
 	virtual ~CNeuron();
 
-	static const float cFiringThres  = 30;//30mv Thres Firing Spikes
+    static constexpr float cFiringThres  = 30;//30mv Thres Firing Spikes
 
 protected:
 	unsigned int miID;

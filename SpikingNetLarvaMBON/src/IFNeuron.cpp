@@ -11,8 +11,9 @@
 # TODO: When Using the Spike Stack need to extend to Have a seperate Stack for Inhibitory Injections
 */
 
-#include "StdAfx.h"
-#include "synapse.h"
+#include "stdafx.h"
+#include "math.h"
+#include "synapseSW.h"
 #include "synapseEnsemble.h"
 #include "synapticTransmission.h"
 #include "INeuron.h"
@@ -62,7 +63,7 @@ IFNeuron::IFNeuron(float timestep,short ID)
 
 }
 
-void IFNeuron::RegisterAfferent(synapseEnsemble* pSyn)
+void IFNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
 	//Check that the array is not Maxed.
 	if (iLastSynapseIndex == (MAX_AFFERENTS-1))
@@ -73,10 +74,15 @@ void IFNeuron::RegisterAfferent(synapseEnsemble* pSyn)
 		//Can have code to increase array size with malloc()
 	}
 
+    if (!pSyn)
+    {
+        std::cerr << "missing synapse ensemble pointer!" << std::endl;
+        abort();
+    }
 	//Register Back to the Synapse Ensemble
-	pSyn->RegisterNeuron(this);
+    pSyn->RegisterNeuron(this);
 	//Add to private array
-	mSynapses[iLastSynapseIndex] = pSyn;
+    mAfferents[iLastSynapseIndex] = pSyn;
 	iLastSynapseIndex++;
 }
 
@@ -188,6 +194,7 @@ double IFNeuron::SumExInjections()
 
 //Run Through All spikes in stack and get the step contribution to the V at a future time Dt
 //Note: The time is not stepped fwd for the Spikes.
+//Sums All independent of Inhibitory Or Exhitatory,
 double IFNeuron::SumExInjections(float Dt)
 {
 #ifdef USE_SONG_CONDUCTANCE	
@@ -226,6 +233,11 @@ double IFNeuron::SumInhInjections(float Dt)
 	return gin_song*exp(-Dt/tafs);
 #endif
 	return 0;
+}
+
+void IFNeuron::StepSimTime()
+{
+
 }
 
 //Solve the Diff Equation , Step Time Fwd Returns the new Membrane V
@@ -310,9 +322,9 @@ void IFNeuron::ActionPotentialEvent()
 	bPostspiketoLog = true;
 	for(unsigned int i=0;i<iLastSynapseIndex;i++)
 	{
-		if (!mSynapses[i]) break; //Null so Next
+        if (!mAfferents[i]) break; //Null so Next
 		//Notify all synapses (Time steps Fwd?)
-		mSynapses[i]->SpikeArrived(synapse::SPIKE_POST);
+        mAfferents[i]->SpikeArrived(ISynapse::SPIKE_POST);
 	}
 
 #ifdef VERBOSE
@@ -356,9 +368,9 @@ IFNeuron::~IFNeuron(void)
 //Delete SynapseEnsembles
 	for(unsigned int i=0;i<iLastSynapseIndex;i++)
 	{
-		if (!mSynapses[i]) continue; //Null so Next
-		delete mSynapses[i];
-		mSynapses[i] = 0;
+        if (!mAfferents[i]) continue; //Null so Next
+        delete mAfferents[i];
+        mAfferents[i] = 0;
 	}
 
 }

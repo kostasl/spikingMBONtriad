@@ -1,11 +1,12 @@
 //============================================================================
 // Name        : SpikingNetwork.cpp
-// Author      : konstantinos Lagogiannis
-// Version     :
-// Copyright   : Izhikevich spiking network as in 2003 Paper
-// Description : Hello World in C++, Ansi-style
+// Author      : konstantinos Lagogiannis 2013
+// Version     : 1.1v
+// Copyright   : Creative Commons - You are free to use and distribute but keep reference to creator
+// Description : Izhikevich spiking network as in 2003 Paper
 //============================================================================
 
+#include "stdafx.h"
 #include <iostream>
 #include <fstream> //File streams
 #include <vector> //for Vectors
@@ -20,7 +21,7 @@
 #include "CFSNeuron.h"
 #include "CRSNeuron.h"
 
-#define PATH_MAX 255
+//#define PATH_MAX 255
 
 using namespace std;
 
@@ -29,8 +30,9 @@ const gsl_rng_type * T;
 gsl_rng * r;
 time_t t;
 
+string strPlotCmd = "gnuplot SpikeRaster.gplot";
 
-int main() {
+int IzhikevichNeuron_main() {
 	const float ts 						= 0.5f; //Timestep
 	const unsigned int iTotalSimSteps 	= 1000;
 	unsigned int itStep 				= 1;
@@ -100,6 +102,10 @@ int main() {
 	//Open Output File
 	char FilePath[PATH_MAX];
 	getcwd(FilePath, PATH_MAX); // reads the current working directory into the array FilePath
+
+    if (chdir(DATDIR)) {
+            perror("chdir to " DATDIR);
+        }
 
 	char buff[] = "SpikeRaster.dat";
 	char buff2[] = "RSNeuronV.dat";
@@ -204,7 +210,22 @@ int main() {
 	gsl_rng_free(r);
 
 
-	system("gnuplot SpikeRaster.gplot");
+    system(strPlotCmd.c_str());
 
 	return 0;
 }
+
+//Transfer data output file init here
+int openOutput()
+{
+
+
+}
+
+//close all dat file
+int closeOutput()
+{
+
+
+}
+

@@ -17,7 +17,8 @@ using namespace SpikeN;
 CFSNeuron::CFSNeuron(unsigned int ID):CNeuron(ID) {
 	// TODO Auto-generated constructor stub
 
-	double rnd =  gsl_rng_uniform(r);
+
+    double rnd = gsl_rng_uniform(r);
 	mfa = 0.02+0.08*rnd;
 
 	rnd =  gsl_rng_uniform(r);

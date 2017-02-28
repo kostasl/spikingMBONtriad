@@ -3,26 +3,30 @@
 // are changed infrequently
 //
 
+#ifndef INCLUDED_STD_H
+#define INCLUDED_STD_H
+
 #pragma once
 
-
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #define _USE_MATH_DEFINES //IN order to use Math COnstants
 #include <stdio.h>
-#include <tchar.h>
 #include <stdlib.h> // for srand ( ) and rand ( ) 
+#include <cstring>
+#include <linux/limits.h> //For Constants Like PATH_MAX
+#include <unistd.h> //for getcwd
 #include <time.h> // for time ( ) and time_t 
 #include <iostream>
 #include <fstream> //File Streams
-#include <direct.h> // for getcwd 
+
+//#include <direct.h> // for getcwd
 //#include <math.h>     // for exp(), log(), and log10()
 
-// ###GSL Note: For the library to work in MSVC, I had to change to the Multithreaded version WinGsl_md.lib
-// Also under Properties->C/C++->Code GEneration->Run Time Library Change to Multithreaded Debug
-#include <WinGsl.h >
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
-///Program Parameters
 
+/// \section Program Parameters
+#define _MAX_PATH PATH_MAX
 #define MAX_AFFERENTS 1202
 #define MAX_SPIKES	2500 //Number of simultanuous spike that can be injecting to the neuron 
 #define G_MAX		0.0151  //0.015 //The Song Conductance Max VAlue used in IFNeuron And SynapseEnsemble
@@ -34,3 +38,10 @@
 //#define VERBOSE
 
 // TODO: reference additional headers your program requires here
+
+/// \section Function Prototypes
+void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime);
+
+
+
+#endif

@@ -16,8 +16,10 @@ update and decay calculation is used as found on the Song et al. paper of 2000. 
 is object is only used to obtain the synaptic strength at the time of transmission.
 */
 
-#include "StdAfx.h"
+#include "stdafx.h"
+#include "math.h"
 #include "synapticTransmission.h"
+
 
 synapticTransmission::synapticTransmission(float timestep,double SynapseStrength)
 {

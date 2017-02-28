@@ -1,6 +1,6 @@
 
-#include "StdAfx.h"
-#include "synapse.h"
+#include "stdafx.h"
+#include "synapseSW.h"
 #include "synapseEnsemble.h"
 #include "synapticTransmission.h"
 #include "INeuron.h"
@@ -42,7 +42,10 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
 
 //adds Afferent to array and registers target neuron with it
 //Same As IFNeuron
-void PoissonNeuron::RegisterAfferent(synapseEnsemble* pSyn)
+/// \name RegisterAfferent
+/// \brief It connects to an afferent neuron via the ensemble Synapse
+/// \param A synapse Ensemble/set connecing the Afferent neuron to this neuron
+void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
 	//Check that the array is not Maxed.
 	if (iLastSynapseIndex == (MAX_AFFERENTS-1))
@@ -89,7 +92,7 @@ void PoissonNeuron::ActionPotentialEvent()
 	{
 		if (!mSynapses[i]) break; //Null so Next
 		//Notify all synapses (Time steps Fwd?)
-		mSynapses[i]->SpikeArrived(synapse::SPIKE_POST);
+        mSynapses[i]->SpikeArrived(ISynapse::SPIKE_POST);
 		
 		nRate+= mSynapses[i]->getSourceFireRate()*mSynapses[i]->getAvgStrength();
 	}

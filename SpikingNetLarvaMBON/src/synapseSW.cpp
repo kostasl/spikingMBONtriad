@@ -3,12 +3,15 @@
 ## The switch maintains state by holding the POT LEVEL (Strength) which is 0 > POT 
 #################################
 */
-#include "StdAfx.h"
-#include "synapse.h"
+#include "stdafx.h"
+#include "isynapse.h"
+#include "synapseSW.h"
+
+#include "math.h"
 
 
 //Default constructor
-synapse::synapse(void)
+synapseSW::synapseSW(void)
 {
 	//Set default model parameters
 	mstate		= OFF;//Start in the OFF state
@@ -36,7 +39,41 @@ synapse::synapse(void)
 		
 }
 
-synapse::synapse(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity)
+
+synapseSW::synapseSW(const synapseSW& obj)
+{
+    ///Setup the GSL Random number Generator
+     // select random number generator
+     rng_r = gsl_rng_alloc (gsl_rng_mt19937);
+     if (!rng_r) throw "GSL RNG Init Failed. Out Of Memory?";
+
+//	 unsigned int seed = unsigned(time(&t)) + rand()*100;
+     unsigned int seed = rand()*100;
+
+     gsl_rng_set(rng_r,seed);
+
+  mstate        = obj.mstate;
+  APOT          = obj.APOT;
+  ADEP          = obj.ADEP;
+  tauPOT        = obj.tauPOT;
+  tauDEP        = obj.tauDEP;
+  channelsPOT   = obj.channelsPOT;
+  channelsDEP   = obj.channelsDEP;
+  mfSreset      = obj.mfSreset;
+  fStrength     = obj.fStrength;
+  mbNoPlasticity = obj.mbNoPlasticity;
+
+}
+
+
+/// \brief Without this  derived constructor we get : undefined reference to `typeinfo for ISynapse
+synapseSW::synapseSW(const ISynapse& obj):synapseSW((synapseSW&)obj)
+{
+
+}
+
+
+synapseSW::synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity)
 {
 	///NOTE CHANGE TO OFF
 	mstate		= OFF;//Start in the OFF state
@@ -68,121 +105,132 @@ synapse::synapse(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,f
 }
 
 
-synapse::SW_STATE synapse::getState()
+synapseSW::SW_STATE synapseSW::getState()
     {
         
         return mstate;
     }
 
-float synapse::getStrength()
+float synapseSW::getStrength()
 {
 	return fStrength;
 }
 
-void synapse::Reset()
+void synapseSW::Reset()
 {
 	///NOTE CHANGE TO OFF
 	mstate		= OFF;//Start in the OFF state
 	fStrength = mfSreset;
 }
 
+float synapseSW::SwitchRulePlasticity(double t,SPIKE_SITE type)
+{
+
+     float Ds=0;//=fStrength;// Potentiation
+    ///React according to current sw state
+    switch (mstate)
+    {
+    case OFF:
+        if (type==SPIKE_POST)
+            //FROM OFF POst Spike arrived, switch to DEP
+            mstate=DEP;
+        else
+            //FROM OFF a pre spike arrived switch on POT
+            mstate=POT;
+            ///PRE Synaptic Spike
+
+        break;
+
+     case POT:
+             if (type==SPIKE_POST)
+             {
+                 //FROM POT a POSTSyn spike arrived
+                 //Has the switch closed?
+                if (StochasticReturnedtoOFF(t))
+                {
+                    //Since Switch At off and POST received go to DEP
+                    mstate=DEP;
+                    ///Switch off, out of time
+                }
+                else
+                {//ON
+                    //Switch operational In POT Mode, so potentiate
+                    ///Normal POT
+                    Ds+=APOT;//Potentiate A+
+                    mstate=OFF; //Return to OFF
+                }
+             }///PRE Synaptic Spike
+             else
+             {
+                 ///Paper says ignore
+                 //Ds=0;
+                 mstate=POT;
+             }
+         break;
+
+     case DEP:
+             if (type==SPIKE_PRE)
+             {
+                 //FROM POT a POSTSyn spike arrived
+                 //Has the switch closed?
+                if (StochasticReturnedtoOFF(t))
+                {
+                    ///Switch was off and PRE spike arrived, Switch to POT
+                    mstate=POT;
+                    ///Switch off, out of time
+                }
+                else
+                {//ON -- DO Dep
+                    //Switch operational In DEP Mode, so de-potentiate
+                    ///Normal DEP
+                    Ds-=ADEP;//Potentiate A-
+                    mstate=OFF; //Return to OFF
+                }
+             }///DEP AND POST Synaptic Spike
+             else
+             {
+                 ///Paper says ignore
+                 //Ds=0;
+                 mstate=DEP;
+             }
+
+         break;
+
+      default:
+            //throw new Exception("Invalid State");
+
+          throw "Synapse at Uknown State!";
+          Ds=-1000;
+
+    }//Close Switch
+}
+
 //T Time since last spike
 //Returns the Change Ds due to spike Arrival.
-float synapse::SpikeArrived(double t,SPIKE_SITE type)
+float synapseSW::SpikeArrived(double t,SPIKE_SITE type)
 {
-        float Ds=0;//=fStrength;// Potentiation
-        ///React according to current sw state
-        switch (mstate)
-        {
-        case OFF:
-            if (type==SPIKE_POST)
-                //FROM OFF POst Spike arrived, switch to DEP
-                mstate=DEP;
-            else
-                //FROM OFF a pre spike arrived switch on POT
-                mstate=POT;
-                ///PRE Synaptic Spike
-                
-            break;
-            
-         case POT:
-                 if (type==SPIKE_POST)
-                 {
-                     //FROM POT a POSTSyn spike arrived 
-                     //Has the switch closed?
-                    if (StochasticReturnedtoOFF(t)) 
-                    {
-                        //Since Switch At off and POST received go to DEP
-                        mstate=DEP;
-                        ///Switch off, out of time
-                    }
-                    else
-                    {//ON
-                        //Switch operational In POT Mode, so potentiate
-                        ///Normal POT
-                        Ds+=APOT;//Potentiate A+
-                        mstate=OFF; //Return to OFF
-                    }   
-                 }///PRE Synaptic Spike
-                 else
-                 {
-                     ///Paper says ignore
-                     //Ds=0;
-                     mstate=POT;
-                 }
-             break;
-             
-         case DEP:
-                 if (type==SPIKE_PRE)
-                 {
-                     //FROM POT a POSTSyn spike arrived 
-                     //Has the switch closed?
-                    if (StochasticReturnedtoOFF(t)) 
-                    {
-                        ///Switch was off and PRE spike arrived, Switch to POT
-                        mstate=POT;
-                        ///Switch off, out of time
-                    }
-                    else
-                    {//ON -- DO Dep
-                        //Switch operational In DEP Mode, so de-potentiate
-                        ///Normal DEP
-                        Ds-=ADEP;//Potentiate A-
-                        mstate=OFF; //Return to OFF
-                    }   
-                 }///DEP AND POST Synaptic Spike
-                 else
-                 {
-                     ///Paper says ignore
-                     //Ds=0;
-                     mstate=DEP;
-                 }
+        float Ds=0;//=fStrength;// Potentiation -> This is now in SwitchPlasticity Rule
 
-             break;
-                
-          default:
-                //throw new Exception("Invalid State");
-            
-			  throw "Synapse at Uknown State!";
-              Ds=-1000;
-                
-        }//Close Switch
 		//Ds=(Ds<0)?0:Ds; 
-		if (!mbNoPlasticity)
+        if (mbNoPlasticity)
 		{
-			//Plasticity is on
+            //Plasticity is off
 			//Low Bound is 0 
-			fStrength += Ds; ///Save new Strength
-
-			// Temp out if (fStrength<0) fStrength =0;
+            Ds = 0; //Save No Change
 		}
+        else //Run Switch-Rule Plasticity
+        {
+            Ds += SwitchRulePlasticity(t,type);
+            fStrength += Ds;
+        }
+
 		//return the change in strength
 		return Ds;
 
 }
 
     //Parameter t: Time since last spike
-bool synapse::StochasticReturnedtoOFF(double t)
+bool synapseSW::StochasticReturnedtoOFF(double t)
     {
         double taf;
 		int	  n;
@@ -219,7 +267,7 @@ bool synapse::StochasticReturnedtoOFF(double t)
 
 }
 
-double synapse::factorial(int k)
+double synapseSW::factorial(int k)
 {
 	if (k==0) return 1;
 	for (int j=(k-1);j>0;j--) k*=j;
@@ -227,7 +275,8 @@ double synapse::factorial(int k)
 }
 
 
-synapse::~synapse(void)
+
+synapseSW::~synapseSW(void)
 {
 	//Free resources Used by GSL RNG
 	gsl_rng_free(rng_r);

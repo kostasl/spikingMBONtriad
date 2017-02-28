@@ -1,8 +1,11 @@
 
 #pragma once
-#include "ineuron.h"
+#include "INeuron.h"
+
+#include "isynapseensemble.h"
+
 //Fwd Declaration
-class synapseEnsemble; //Fwd Declaration
+//class synapseEnsemble; //Fwd Declaration
 class synapticTransmission;
 //class INeuron;
 
@@ -10,14 +13,15 @@ class IFNeuron: public INeuron
 {
 public:
 	IFNeuron(float timestep,short ID=0);
-	double StepRK_UpdateVm(void);
-	void RegisterAfferent(synapseEnsemble* s); //adds Afferent to array and registers target neuron with it
-	void SpikeArrived(synapticTransmission* s); //Called by SynapseEnsemble
-	void ActionPotentialEvent(); //Called when neuron reaches threshold
-	bool PostSpikeOccured();
-	void Reset();
-	unsigned short getFireRate(); //Returns the number of Spikes In the previous Elapsed second 
-	int getID(void);
+    virtual double StepRK_UpdateVm(void);
+    virtual void StepSimTime();
+    virtual void RegisterAfferent(ISynapseEnsemble* s); //adds Afferent to array and registers target neuron with it
+    virtual void SpikeArrived(synapticTransmission* s); //Called by SynapseEnsemble
+    virtual void ActionPotentialEvent(); //Called when neuron reaches threshold
+    virtual bool PostSpikeOccured();
+    virtual void Reset();
+    virtual unsigned short getFireRate(); //Returns the number of Spikes In the previous Elapsed second
+    virtual int getID(void);
 	~IFNeuron(void);
 	
 private:
@@ -37,7 +41,7 @@ private:
 	float mfPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
 	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
 	unsigned short msLastFireRate; //The number of spikes during the last second
-	synapseEnsemble* mSynapses[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
+    ISynapseEnsemble* mAfferents[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
 	unsigned int iLastSynapseIndex;
 	synapticTransmission* mSpikes[MAX_SPIKES]; //Pointer to Spike Members array
 	int iLastSpikeIndex;

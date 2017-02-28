@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "synapse.h"
+#include "synapseSW.h"
 #include "IFNeuron.h"
 #include "synapseEnsemble.h"
 #include "PoissonSource.h"
@@ -15,9 +15,9 @@
 
 // ###GSL Note: For the library to work, I had to change to the Multithreaded version WinGsl_md.lib
 // Also under Properties->C/C++->Code GEneration->Run Time Library Change to Multithreaded Debug
-#include <WinGsl.h >
-//#include <gsl/gsl_rng.h>
-//#include <gsl/gsl_randist.h>
+//#include <WinGsl.h >
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 
 using namespace std;
@@ -44,19 +44,19 @@ double testS2SPoissonTrainWithBurstsVarPostRate(int nspikes,int burstLength);
 //const float h=0.0002f;
 const float h=0.0001f;
 
-char FilePath[_MAX_PATH]; // _MAX_PATH represents the longest possible path on this OS 
+char FilePath[PATH_MAX]; // _MAX_PATH represents the longest possible path on this OS
 
 //Setup test variables
-synapse* stest;
-synapseEnsemble* synstest;
+ISynapse* stest;
+ISynapseEnsemble* synstest;
 PoissonSource* Ps1,*Ps2;
 
 	//Variables for IFTEST
-	int iTestFq	= 40;
-	const int iNoExSynapses = 1; //Number of synapses to test IFNeuron
-	const int iNoInhSynapses = 0;//200; //Inhibitory synapses
-	int IFSimulationTime = 60000000;
-	int NoSyns	= 1;//Switch rule Ensemble's number of Synapses
+    int iTestFq	= 40;
+    const int iNoExSynapses = 1; //Number of synapses to test IFNeuron
+    const int iNoInhSynapses = 0;//200; //Inhibitory synapses
+    int IFSimulationTime = 60000000;
+    int NoSyns	= 1;//Switch rule Ensemble's number of Synapses
 	///According to Appleby&Elliott A~10^-3 or lower achieves stable competitive dynamics
 	//THESE PARAMETERS ONY AFFECT SWITCH RULE
 	float APOT	= 1.0f;///(iTestFq*200); //(iTestFq*IFSimulationTime*h); Too Slow
@@ -68,7 +68,7 @@ PoissonSource* Ps1,*Ps2;
 	float StartStrength = 1.0f;
 
 
-int _tmain(int argc, _TCHAR* argv[])
+int STDP_mod_tmain(int argc, char* argv[])
 {
 	//Timing The process
 	clock_t start, finish;
@@ -329,7 +329,7 @@ void testGSL()
 void testSynaptTransmission()
 {
 	double tm=0;
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	ofstream ofile( strcat(FilePath,"\\synTrans.csv"), ios::out );
 	
 	//Do Headers
@@ -386,7 +386,7 @@ void testIFNeuron()
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\synsStrength.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -478,7 +478,7 @@ void testSynapseCorrelation(int nSynapses)
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynCorrelationWithPoisson40-30.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -548,7 +548,7 @@ void testSpikeTrain(float spikeInterval,int nspikes)
 	double totalDs=0;
 
 
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynTrain.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -649,7 +649,7 @@ void testPoissonTrain(int nspikes)
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynPoissonExpIFNeuron.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -821,7 +821,7 @@ void testCorrelationIFNeuron(int nspikes)
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\ExpVarIFNeuron-1and100Syns2-100Spikes.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -1002,7 +1002,7 @@ double testS2SPoissonTrain(int nspikes)
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynPoissonExpVarPostRate.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -1063,7 +1063,7 @@ double testS2SPoissonTrain(int nspikes)
 		totalDs+=Ds[tm-1];
 
 		Mean=totalDs/tm;
-		Var+=abs(Ds[tm-1]-Mean)/(trials-tm+1);
+        Var+=abs((int)(Ds[tm-1]-Mean))/(trials-tm+1);
 		
 		timetolog++;
 		if (timetolog>verboseperiod)
@@ -1095,7 +1095,7 @@ double testS2SPoissonTrain(int nspikes)
 
 void BCMRule()
 {
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\BCM50Spikes.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -1168,7 +1168,7 @@ double testS2SPoissonTrainWithBursts(int nspikes,int burstLength)
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynPoissonExpVarWithBurst15.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -1237,7 +1237,7 @@ double testS2SPoissonTrainWithBursts(int nspikes,int burstLength)
 		totalDs+=Ds[tm-1];
 
 		Mean=totalDs/tm;
-		Var+=abs(Ds[tm-1]-Mean)/(trials-tm+1);
+        Var+=abs((int)(Ds[tm-1]-Mean))/(trials-tm+1);
 		
 		timetolog++;
 		if (timetolog>verboseperiod)
@@ -1332,7 +1332,7 @@ int PostRate[] ={44,42,42,42,42,43,43,44,45,46,47,48,49,50,50,51,52,53,53,54,54,
 
 	//Open Log file for Synapse Strength
 	///Record Synapse Strengths
-	_getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath 
+    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
 	char *buff = strcat(FilePath,"\\..\\output\\SynPoissonExpVarPostRate100Syns.csv");
 	ofstream ofile(buff, ios::out );
 
@@ -1406,7 +1406,7 @@ int PostRate[] ={44,42,42,42,42,43,43,44,45,46,47,48,49,50,50,51,52,53,53,54,54,
 		totalDs+=Ds[tm-1];
 
 		Mean=totalDs/tm;
-		Var+=abs(Ds[tm-1]-Mean)/(trials-tm+1);
+        Var+=abs((int)(Ds[tm-1]-Mean))/(trials-tm+1);
 		
 		timetolog++;
 		if (timetolog>verboseperiod)

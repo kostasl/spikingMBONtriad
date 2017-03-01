@@ -6,6 +6,8 @@
  */
 
 #include "CNeuron.h"
+
+///\todo Convert to implement INeuron
 using namespace SpikeN;
 
 CNeuron::CNeuron(unsigned int ID) {

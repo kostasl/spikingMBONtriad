@@ -23,7 +23,7 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short sourceID,short ID)
     mfSimTimestep           = simTimeStep;
 
     mdTimeSinceLastSpike    = 0;//Reset Time since last spike
-    mSourceFireRate         = 0;
+    //mSourceFireRate         = 0;
     msourceID               = sourceID;
     mtargetID               = 0;
     mpTargetNeuron          = 0; //Init Pointer to 0
@@ -69,6 +69,8 @@ template<class T,int N> float synapseEnsemble<T,N>::SpikeArrived(ISynapse::SPIKE
        {
            synapticTransmission* sp = new synapticTransmission((float)mfSimTimestep,mfAvgStrength);
            if (mpTargetNeuron != 0) mpTargetNeuron->SpikeArrived(sp); //Spike Is passed to Neuron
+
+
        }
 
 #ifdef USE_SONG_LEARNING
@@ -138,11 +140,13 @@ void synapseEnsemble<T,N>::logtofile(std::ofstream &fs)
 {
 	fs << mID << " " << msourceID << " " <<  mtargetID << " " << mfAvgStrength << std::endl;
 }
-template<class T,int N>
-unsigned short synapseEnsemble<T,N>::getSourceFireRate()
-{
-	return mSourceFireRate;
-}
+
+//Deprecated
+//template<class T,int N>
+//unsigned short synapseEnsemble<T,N>::getSourceFireRate()
+//{
+//	return mSourceFireRate;
+//}
 
 template<class T,int N>
 ISynapse* synapseEnsemble<T,N>::getSynapseArray()
@@ -153,7 +157,11 @@ ISynapse* synapseEnsemble<T,N>::getSynapseArray()
 template<class T,int N>
 synapseEnsemble<T,N>::~synapseEnsemble(void)
 {
-	delete [] arrSynapses;
+    //delete [] arrSynapses throws Seg fault!
+
+    //for(int i=0;i<miSynapsesCount;i++)
+    //    if (&arrSynapses[i])
+            //delete &arrSynapses[i];
 }
 
 

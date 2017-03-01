@@ -40,7 +40,7 @@ synapseSW::synapseSW(void)
 }
 
 
-synapseSW::synapseSW(const synapseSW& obj)
+synapseSW::synapseSW(const synapseSW& obj): ISynapse(obj)
 {
     ///Setup the GSL Random number Generator
      // select random number generator
@@ -205,8 +205,10 @@ float synapseSW::SwitchRulePlasticity(double t,SPIKE_SITE type)
     }//Close Switch
 }
 
-//T Time since last spike
-//Returns the Change Ds due to spike Arrival.
+/// \brief Handles Spike events of either post or presynaptic origin - Passes these to the switch rule
+/// \param time of event
+/// \param Enum value of where the Spike occured, presynaptic or Postsynaptic
+/// \return the Change Ds due to spike Arrival.
 float synapseSW::SpikeArrived(double t,SPIKE_SITE type)
 {
         float Ds=0;//=fStrength;// Potentiation -> This is now in SwitchPlasticity Rule
@@ -279,5 +281,10 @@ double synapseSW::factorial(int k)
 synapseSW::~synapseSW(void)
 {
 	//Free resources Used by GSL RNG
-	gsl_rng_free(rng_r);
+    //try{
+    gsl_rng_free(rng_r);
+    //}catch (int e)
+    //{
+
+    //}
 }

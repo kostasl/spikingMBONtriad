@@ -17,9 +17,10 @@ public:
     virtual void RegisterAfferent(ISynapseEnsemble* s)=0; //adds Afferent to array and registers target neuron with it
     virtual void SpikeArrived(synapticTransmission* s)=0; //Called by SynapseEnsemble
     virtual void ActionPotentialEvent()=0; //Called when neuron reaches threshold
-    virtual unsigned short getFireRate()=0; //Returns the number of Spikes In the previous Elapsed second
+    virtual bool ActionPotentialOccured()=0;
+    virtual float getFireRate()=0; //Returns the number of Spikes In the previous Elapsed second
     virtual void StepSimTime()=0;
     virtual int getID(void)=0;
 
-	~INeuron(void);
+    virtual ~INeuron(void);
 };

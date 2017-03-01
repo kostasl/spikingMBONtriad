@@ -17,6 +17,8 @@
 #include <time.h> // for time ( ) and time_t 
 #include <iostream>
 #include <fstream> //File Streams
+#include <map>
+#include <vector>
 
 //#include <direct.h> // for getcwd
 //#include <math.h>     // for exp(), log(), and log10()

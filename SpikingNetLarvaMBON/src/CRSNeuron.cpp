@@ -1,10 +1,12 @@
-/*
- * CRSNeuron.cpp
- * This is a Izhikevich Regular Spiking  neuron -
- *  Created on: 19 Feb 2013
- *      Author: kostasl
- */
+///*
+/// * \class CRSNeuron.cpp
+/// * \brief This is a Izhikevich Regular Spiking  neuron -
+/// * \date 19 Feb 2013
+/// * \author: kostasl
+/// */
 
+///\todo Convert to implement INeuron
+///
 #include "CRSNeuron.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>

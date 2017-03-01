@@ -338,7 +338,7 @@ int IFNeuron::getID()
 	return mID;
 }
 
-unsigned short IFNeuron::getFireRate()
+float IFNeuron::getFireRate()
 {
 	msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
 
@@ -348,7 +348,7 @@ unsigned short IFNeuron::getFireRate()
 }
 
 //Returns true if neuron has fired during previous Step
-bool IFNeuron::PostSpikeOccured()
+bool IFNeuron::ActionPotentialOccured()
 {
 	return bPostspiketoLog;
 }

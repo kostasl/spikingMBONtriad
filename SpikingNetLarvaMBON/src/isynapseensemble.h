@@ -25,13 +25,15 @@ public:
     virtual ISynapse* getSynapseArray()=0;
     virtual int getSynapsesCount()=0;
     virtual double getAvgStrength()=0;
-    virtual unsigned short getSourceFireRate()=0;
+    //virtual unsigned short getSourceFireRate()=0;
     virtual void Reset(void)=0;
 
     ///  \brief When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
     virtual void RegisterNeuron(INeuron* pNeuron)=0;
     virtual short getsourceID()=0;
     virtual short gettargetID()=0;
+
+    virtual ~ISynapseEnsemble();
 
 };
 

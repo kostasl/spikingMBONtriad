@@ -19,9 +19,8 @@ public:
 	bool StochasticReturnedtoOFF(double t);
 	double factorial(int k);///Calc factoria
     virtual void Reset(); //Reset Strength and State
-    ~synapseSW(void);
+    virtual ~synapseSW(void);
     
-	
 	time_t t; //Used for random num generation
 
 private:

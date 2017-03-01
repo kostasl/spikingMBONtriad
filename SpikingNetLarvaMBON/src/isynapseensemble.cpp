@@ -11,22 +11,4 @@
 //{
 
 //}
-///\todo Make Abstract Class
-//float ISynapseEnsemble::SpikeArrived(ISynapse::SPIKE_SITE type)
-//{
 
-//}
-//void ISynapseEnsemble::RegisterNeuron(INeuron* pNeuron)
-//{
-
-//}
-
-//short ISynapseEnsemble::getsourceID()
-//{
-
-//}
-
-//short ISynapseEnsemble::gettargetID()
-//{
-
-//}

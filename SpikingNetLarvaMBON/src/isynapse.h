@@ -10,9 +10,12 @@ public:
 
     ISynapse();
     ISynapse(const ISynapse& obj); //Copy Constructor
-    virtual float getStrength(); //Returns the Potentiation value
-    virtual float SpikeArrived(double t,SPIKE_SITE type); //throws Exception
-    virtual void Reset(); //Reset Strength and State
+
+    virtual float getStrength()=0; //Returns the Potentiation value
+    virtual float SpikeArrived(double t,SPIKE_SITE type)=0; //throws Exception
+    virtual void Reset()=0; //Reset Strength and State
+    virtual ~ISynapse();
 };
+
 
 #endif // ISYNAPSE_H

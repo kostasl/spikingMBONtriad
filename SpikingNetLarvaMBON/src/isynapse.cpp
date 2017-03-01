@@ -9,26 +9,13 @@ ISynapse::ISynapse()
 
 }
 
- /// \brief Copy Constructor
+
 ISynapse::ISynapse(const ISynapse& obj)
 {
 
 }
 
-//Returns the Potentiation value
-float ISynapse::getStrength()
-{
-
-}
-
- //throws Exception
-float ISynapse::SpikeArrived(double t,SPIKE_SITE type)
-{
-
-}
-
- //Reset Strength and State
-void ISynapse::Reset()
+ISynapse::~ISynapse()
 {
 
 }

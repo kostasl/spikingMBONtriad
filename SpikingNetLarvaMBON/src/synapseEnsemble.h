@@ -24,7 +24,7 @@ public:
     virtual ISynapse* getSynapseArray();
     virtual int getSynapsesCount();
     virtual double getAvgStrength();
-    virtual unsigned short getSourceFireRate();
+    //virtual unsigned short getSourceFireRate();
     virtual void Reset(void);
 	//When a Neuron registers this SynapseEnsemble it will register also pass
 	// a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
@@ -32,7 +32,7 @@ public:
     virtual short getsourceID();
     virtual short gettargetID();
 	void logtofile(std::ofstream &fs);//Passed an open filestream it will log the synapse strength
-	~synapseEnsemble(void);
+    virtual ~synapseEnsemble(void); //Virtual Destructor Called from Base Class
 
 
 private:
@@ -42,7 +42,7 @@ private:
 	double mfSimTimestep;//The simulation time step in seconds
 	double mdTimeSinceLastSpike; //In Seconds
 	double mfAvgStrength; //Was Float made into Double
-	unsigned short mSourceFireRate; //Holds the Afferent Fire Rate, used by PoissonNeuron
+    /// Deprecated unsigned short mSourceFireRate; //Holds the Afferent Fire Rate, used by PoissonNeuron
 	int	  miSynapsesCount;
 	float mfStartStrength; //Holds The Constructor given value, Used when Reset
 

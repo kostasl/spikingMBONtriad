@@ -1,15 +1,15 @@
-/* ###### IFNeuron - Integrate and Fire Neuron ###
-# Implements a simple 1st order Euler Numerical approximation solution to the Diff Eqn
-# dV/dt=1/taf*(El-V(t)+R*Sumj[sj*Sum_tfr(epsilon(t-tf))]))
-# Details: Everytime a spike event occurs a synapticTransmission object is created and added to a list
-# in the target IFNeuron. The object is removed from the list when it's life time expires.
-
-# EXTENSION: The Song et al. 2000 learning and conductance update method is also accommodated. The class can use
-# either the independent decay of conductances using a stack of synaptic response (SynapticTransmission) objects
-# or by Defining USE_SONG_CONDUCTANCE in the header file, all conductances are summed and decay is treated 
-# as a single exponential.
-# TODO: When Using the Spike Stack need to extend to Have a seperate Stack for Inhibitory Injections
-*/
+/// \class IFNeuron  Integrate and Fire Neuron ###
+///\brief Implements a simple 1st order Euler Numerical approximation solution to the Diff Eqn
+/// dV/dt=1/taf*(El-V(t)+R*Sumj[sj*Sum_tfr(epsilon(t-tf))]))
+/// Details: Everytime a spike event occurs a synapticTransmission object is created and added to a list
+/// in the target IFNeuron. The object is removed from the list when it's life time expires.
+/// IF Neuron shows a spike potential of 20mv, for 1 timestep
+///
+/// \note EXTENSION: The Song et al. 2000 learning and conductance u\pdate method is also accommodated. The class can use
+/// either the independent decay of conductances using a stack of synaptic response (SynapticTransmission) objects
+/// or by Defining USE_SONG_CONDUCTANCE in the header file, all conductances are summed and decay is treated
+/// as a single exponential.
+/// \todo: When Using the Spike Stack need to extend to Have a seperate Stack for Inhibitory Injections
 
 #include "stdafx.h"
 #include "math.h"
@@ -27,6 +27,7 @@ IFNeuron::IFNeuron(float timestep,short ID)
 	Eex					= 0; //mV
 	Ein					= -0.070;//mV
 	Vrest				= -0.070;//mV
+    Vspike              = 0.020;//Brief t=1 Spike Potential (Delta like)
 #ifdef USE_SONG_LEARNING
 	Vreset				= -0.060; //mV -0.060 Proposed by Song, should use -90mV
 #else
@@ -248,6 +249,8 @@ double IFNeuron::StepRK_UpdateVm(void)
 	bPostspiketoLog = false;
 
 	ClearSpikeList();
+    if (Vm > Vthres) //If Spike Occured on previous step - Then set back to Reset potential
+        Vm=Vreset;
 	
 	///DO the RK Update Algorithm
 	//1 k1=hf(xn,yn)
@@ -307,10 +310,11 @@ double IFNeuron::StepRK_UpdateVm(void)
 	if (Vm>Vthres) 
 	{
 		msNumberOfSpikesInPeriod++;
-		Vm=Vreset;
+        //Vm=Vreset;
+        Vm =Vspike;
 		ActionPotentialEvent(); //Send Post Syn Spike event back to Synapses
 	
-		return Vthres;
+        //return Vthres;
 	}
 	
 

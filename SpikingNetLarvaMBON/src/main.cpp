@@ -8,14 +8,12 @@
 
 
 
-
-
 #include "stdafx.h"
 #include "isynapse.h"
 #include "IFNeuron.h"
 #include "synapseSW.h"
 #include "synapseEnsemble.h"
-
+#include "math.h"
 #include "PoissonSource.h"
 #include "PoissonNeuron.h"
 #include "synapticTransmission.h"
@@ -59,7 +57,9 @@ static const float tafDEP	= 0.020f;
 static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
 /// \todo
-static const float StartStrength = 100.0f;
+static const float StartStrength = 20.0f;
+static const float fKCOscPeriod     = 10.0f; //Period of KC input Neuron Oscillation
+static const float fKCBaselineFq    = 20.0f; //Period of KC input Neuron Oscillation
 
 static const string strPlotCmd = "gnuplot SpikeRaster.gplot";
 
@@ -110,7 +110,7 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
     int	verboseperiod = 50000;
     int timetolog = verboseperiod;
-    int cnt=0;
+    uint cnt=0;
     int spikecnt = 0;
     int TotalPostSpikes = 0; //Used to get the Average Post Rate
 
@@ -139,9 +139,9 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         //posynen->RegisterNeuron(ifn);
         ifn->RegisterAfferent((ISynapseEnsemble*)(posynen)); //Let the nEuron Know a bundle of synapses is connecting to it
 
-        //Create New Efferent
+        //Create New Efferent / start IDs from 5+
         //PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
-        pPsKC[i] = new PoissonNeuron(h,i,iTestFq,false);
+        pPsKC[i] = new PoissonNeuron(h,i+5,iTestFq,false);
 
     }
 
@@ -165,8 +165,9 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         //Run Through each afferent and Poisson Source
         for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
         {
-
+            pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
             pPsKC[i]->StepSimTime();
+
             if (pPsKC[i]->ActionPotentialOccured())
             {
                 synstest[i]->SpikeArrived(ISynapse::SPIKE_PRE);
@@ -183,13 +184,22 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
             //if (timetolog==0 && i < iNoExSynapses) synstest[i]->logtofile(ofile);
         }
         Vm = ifn->StepRK_UpdateVm();
-        if (ifn->ActionPotentialOccured()) TotalPostSpikes++;
+
+        //Log New Membrane Voltage
+        (*ofiles["MBONLog"]) << t <<"\t" << Vm  << endl;
+
+        if (ifn->ActionPotentialOccured())
+        {
+            TotalPostSpikes++;
+            (*ofiles["SpikeRasterLog"])  << ifn->getID() << "\t" << t << endl;
+        }
+
 
         if (timetolog==0)
         {
             cout<< cnt<< " t: "<< t << " Vm:" <<  Vm << " Sj:" << synstest[0]->getAvgStrength() << " F Rate:" << ifn->getFireRate() << " Avg Rate:" << TotalPostSpikes/t <<endl;
             //Log Poisson KC neurons
-            //cout << "Ps 1: " << Ps[1]->getFireRate() << endl;
+            //cout << "Ps 1: " << pPsKC[1]->getFireRate() << endl;
             timetolog=verboseperiod;
 
         }

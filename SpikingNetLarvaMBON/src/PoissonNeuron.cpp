@@ -100,7 +100,7 @@ bool  PoissonNeuron::ActionPotentialOccured()
 /// \brief Called when neuron Produces output
 void PoissonNeuron::ActionPotentialEvent() 
 {
-	double nRate= 0;
+    //double nRate= 0;
     for(unsigned int i=0;i<iLastSynapseIndex;i++)
 	{
 		if (!mSynapses[i]) break; //Null so Next

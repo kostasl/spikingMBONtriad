@@ -33,7 +33,7 @@ private:
 	double SumInhInjections(float Dt); //Calc at a time+Dt
 	short mID; //A Number to distinguish this Neuron
 	double Eex,Ein;
-	double Vrest,Vm,Vreset,Vthres;
+    double Vrest,Vm,Vreset,Vthres,Vspike;
 	double tafm;
 	float tafs; //conductance time constant
 

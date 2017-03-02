@@ -215,17 +215,17 @@ int IzhikevichNeuron_main() {
 	return 0;
 }
 
-//Transfer data output file init here
-int openOutput()
-{
+///\todo Transfer data output file init here
+//int openOutput()
+//{
 
 
-}
+//}
 
-//close all dat file
-int closeOutput()
-{
+////close all dat file
+//int closeOutput()
+//{
 
 
-}
+//}
 

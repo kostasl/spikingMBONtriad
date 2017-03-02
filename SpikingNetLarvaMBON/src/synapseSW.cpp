@@ -203,6 +203,8 @@ float synapseSW::SwitchRulePlasticity(double t,SPIKE_SITE type)
           Ds=-1000;
 
     }//Close Switch
+
+    return Ds;
 }
 
 /// \brief Handles Spike events of either post or presynaptic origin - Passes these to the switch rule

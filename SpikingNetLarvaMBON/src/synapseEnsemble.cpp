@@ -1,10 +1,10 @@
-/* ###################  SYNAPSE ENSEMBLE ##############################################
-# The collection of single synapses. The Ensemble propagates spike events to synapses, 
-# and holds the time since the last spike event. On every simulation time tick, either 
-#  SpikeArrived or StepNoSpike() must be called.
-# Kostas 23/6/07
-######################################################################################
-*/
+///* \class SYNAPSE ENSEMBLE
+/// \brief The collection of single synapses. The Ensemble propagates spike events to synapses,
+/// and holds the time since the last spike event.
+///  \note On every simulation time tick, either  SpikeArrived or StepNoSpike() must be called.
+/// \author Kostas Lagogiannis 23/6/07
+///
+
 #include "stdafx.h"
 #include "math.h"
 #include "isynapse.h"

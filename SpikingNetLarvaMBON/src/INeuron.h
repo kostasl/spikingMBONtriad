@@ -15,6 +15,7 @@ class INeuron
 public:
 	INeuron(void);
     virtual void RegisterAfferent(ISynapseEnsemble* s)=0; //adds Afferent to array and registers target neuron with it
+    virtual void RegisterEfferent(ISynapseEnsemble* s)=0;
     virtual void SpikeArrived(synapticTransmission* s)=0; //Called by SynapseEnsemble
     virtual void ActionPotentialEvent()=0; //Called when neuron reaches threshold
     virtual bool ActionPotentialOccured()=0;

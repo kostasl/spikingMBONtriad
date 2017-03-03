@@ -5,7 +5,7 @@ class PoissonSource
 public:
 	PoissonSource(int lamda,float timeStep,double noiseStdev);
 	bool drawSpikeEvent(void);
-	double randGauss( double min, double max, double sigma, double centre);
+    double randGauss(double sigma);
 	double gsl_ran_exponential ();
 	int getLamda();
 	float getRate();

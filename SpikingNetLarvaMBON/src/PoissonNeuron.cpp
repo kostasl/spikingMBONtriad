@@ -7,6 +7,7 @@
 /// \author Kostantinos Lagogiannis 2007
 
 #include "stdafx.h"
+#include <gsl/gsl_math.h>
 #include "synapseSW.h"
 #include "synapseEnsemble.h"
 #include "synapticTransmission.h"
@@ -43,7 +44,7 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
 //adds Afferent to array and registers target neuron with it
 //Same As IFNeuron
 /// \name RegisterAfferent
-/// \brief It connects to an afferent neuron via the ensemble Synapse
+/// \brief It connects to an afferent (target) neuron via the ensemble Synapse
 /// \param A synapse Ensemble/set connecing the Afferent neuron to this neuron
 void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
@@ -58,12 +59,39 @@ void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 	}
 
 	//Register Back to the Synapse Ensemble
-	pSyn->RegisterNeuron(this);
+    pSyn->RegisterAfferentNeuron(this);
 	//Add to private array
-	mSynapses[iLastSynapseIndex] = pSyn;
+    mAfferents[iLastSynapseIndex] = pSyn;
 	iLastSynapseIndex++;
 
 }
+
+
+//adds Afferent to array and registers target neuron with it
+//Same As IFNeuron
+/// \name RegisterEfferent
+/// \brief It connects to an efferent (source) neuron via the ensemble Synapse to this neuron
+/// \param A synapse Ensemble/set connecing the Afferent neuron to this neuron
+void PoissonNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
+{
+    //Check that the array is not Maxed.
+    if (iLastSourceSynapseIndex == (MAX_AFFERENTS-1))
+    {
+        std::cout << "Max efferent number reached, Increase MAX_AFFERENTS ";
+        abort();
+        throw "Max efferent number reached, Increase MAX_AFFERENTS ";
+        /// \todo Can have code to increase array size with malloc() or convert to std vector
+
+    }
+
+    //Register Back to the Synapse Ensemble
+    pSyn->RegisterEfferentNeuron(this);
+    //Add to private array
+    mEfferents[iLastSourceSynapseIndex] = pSyn;
+    iLastSourceSynapseIndex++;
+
+}
+
 
 void PoissonNeuron::SpikeArrived(synapticTransmission* s)
 {
@@ -71,6 +99,7 @@ void PoissonNeuron::SpikeArrived(synapticTransmission* s)
 	//Clear memory from new object
 	delete s; 
 }
+
 //Called on every Simulation step
 void PoissonNeuron::StepSimTime()
 {
@@ -100,14 +129,19 @@ bool  PoissonNeuron::ActionPotentialOccured()
 /// \brief Called when neuron Produces output
 void PoissonNeuron::ActionPotentialEvent() 
 {
-    //double nRate= 0;
-    for(unsigned int i=0;i<iLastSynapseIndex;i++)
+    //double nRate= 0; //Loop until the largest index is passed between the Afferent / Efferent Synapse Lists
+    for(unsigned int i=0;i< GSL_MAX (iLastSynapseIndex,iLastSourceSynapseIndex);i++)
 	{
-		if (!mSynapses[i]) break; //Null so Next
+        if (!mAfferents[i] &&  !mEfferents[i]) break; //Null so Next - So Skip Loop
+
 		//Notify all synapses (Time steps Fwd?)
-        mSynapses[i]->SpikeArrived(ISynapse::SPIKE_POST);
+        if (mAfferents[i])
+            mAfferents[i]->SpikeArrived(ISynapse::SPIKE_POST); //incoming synapses receive A spike (BAP) at the post synaptic site
+
+        if (mEfferents[i])
+            mEfferents[i]->SpikeArrived(ISynapse::SPIKE_PRE); //OutGoing Synapses Receive A pre Spike
 		
-        ///Deprecated nRate+= mSynapses[i]->getSourceFireRate()*mSynapses[i]->getAvgStrength();
+        ///Deprecated :nRate+= mSynapses[i]->getSourceFireRate()*mSynapses[i]->getAvgStrength();
 	}
 
     ////Removed Assume all pre neurons have the same strength

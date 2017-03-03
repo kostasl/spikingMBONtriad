@@ -21,6 +21,8 @@ public:
     virtual float SpikeArrived(ISynapse::SPIKE_SITE type); //Returns the avg strenght of the ensemble
     virtual void StepNoSpike(); //Called when no spike event on the simulation step
     virtual void StepNoSpike(double t);
+    virtual void StepSimTime();
+
     virtual ISynapse* getSynapseArray();
     virtual int getSynapsesCount();
     virtual double getAvgStrength();
@@ -28,7 +30,8 @@ public:
     virtual void Reset(void);
 	//When a Neuron registers this SynapseEnsemble it will register also pass
 	// a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
-    virtual void RegisterNeuron(INeuron* pNeuron);
+    virtual void RegisterAfferentNeuron(INeuron* pNeuron); //Save pointer to Target Neuron
+    virtual void RegisterEfferentNeuron(INeuron* pNeuron); //Save pointer to Source Neuron
     virtual short getsourceID();
     virtual short gettargetID();
 	void logtofile(std::ofstream &fs);//Passed an open filestream it will log the synapse strength
@@ -47,7 +50,9 @@ private:
 	float mfStartStrength; //Holds The Constructor given value, Used when Reset
 
 	bool mbNoPlasticity;
+    bool bSpikeOccured;
 	INeuron* mpTargetNeuron;
+    INeuron* mpSourceNeuron;
     T arrSynapses[N]; //Initialize memory Array
 
 	///Song Model
@@ -68,7 +73,8 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep, ISynapse& osynapse)
        // mbNoPlasticity      = bNoPlasticity; //True : Do not Modify mfAvgStrength
         //msourceID           = sourceID;
         //mSourceFireRate     = SourceFireRate;
-        mfStartStrength      = osynapse.getStrength(); //Holds The Constructor given value, Used when Reset
+        mfStartStrength       = osynapse.getStrength(); //Holds The Constructor given value, Used when Reset
+        bSpikeOccured         = false;
 
         #ifdef USE_SONG_LEARNING
         //Song Paper States Start Strength Maximum is g_max ~0.02
@@ -97,13 +103,24 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep, ISynapse& osynapse)
         miSynapsesCount         = N;
 
         //Reset Time since last spike
-        mdTimeSinceLastSpike    = 0;
+        mdTimeSinceLastSpike    = 0.0;
         mpTargetNeuron          = 0; //Init Pointer to 0
         mfAvgStrength           = mfStartStrength*N;
 
 }
 
 
+
+/// \brief Called when when a simulation TimeStep Is complete
+/// It accumulates the time since last spike event if no spike event occured
+template<class T,int N>
+void synapseEnsemble<T,N>::StepSimTime()
+{
+    //If no Spike Occured in this Simulation Timestep then step time forward with StepNoSpike -
+    //Otherwise StepSpike Would have already been called
+    if (bSpikeOccured)
+        StepNoSpike();
+}
 
 //Called when no spike event on the simulation step
 template<class T,int N>
@@ -149,6 +166,6 @@ void synapseEnsemble<T,N>::Reset()
 
    //mfAvgStrength = G_MAX; //Reset to Max COnductance
    mfAvgStrength = mfStartStrength*miSynapsesCount; //0; //Start from 0 for the Poisson Train test.
-   mdTimeSinceLastSpike = 0;
+   mdTimeSinceLastSpike = 0.0;
 }
 

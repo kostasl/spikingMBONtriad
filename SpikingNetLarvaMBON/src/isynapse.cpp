@@ -12,7 +12,7 @@ ISynapse::ISynapse()
 
 ISynapse::ISynapse(const ISynapse& obj)
 {
-
+//Need a function body Declared here
 }
 
 ISynapse::~ISynapse()

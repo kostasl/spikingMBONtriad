@@ -38,7 +38,8 @@ static char FilePath[_MAX_PATH]; // _MAX_PATH represents the longest possible pa
 typedef std::map<std::string, std::ofstream*> FileMap;
 typedef FileMap::iterator Iterator;
 
-FileMap ofiles; //declare map file object
+//declare map of log files - Used to Organize all output streams
+FileMap ofiles;
 
 
 //Variables for IFTEST
@@ -46,7 +47,10 @@ static const int iTestFq	= 10;
 static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
 static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
 static const uint IFSimulationTime = 10000000;//10000000;
-static const int NoSyns	= 1;//Switch rule Ensemble's number of Synapses
+static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
+static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
+static const int NoSynsWd	= 1;//Switch rule Ensemble's number of Synapses  DAN -> MBON
+static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
 
 
 //THESE PARAMETERS ONY AFFECT SWITCH RULE
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
 }
 
 
-
+/// \brief Instantiates N poisson excitatory neurons feeding onto an IF neuron , with no plasticity
 void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
     int	verboseperiod = 50000;
@@ -121,7 +125,9 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     cout << "---- Test IF Neuron  with Gamma: " << gamma << endl;
 
 
-    synapseEnsemble<synapseSW,NoSyns> *synstest[iNoExSynapses+iNoInhSynapses];// = new synapseEnsemble[iNoExSynapses];
+    //Make Synapses
+    //Synapse Array
+    synapseEnsemble<synapseSW,NoSynsWb> *arrKCsynsWb[iNoExSynapses+iNoInhSynapses];//KC->MBON Synapses
     PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent
 
     //Create IFNeuron
@@ -133,30 +139,21 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     //Create and register Exhitatory Synapses
     for (int i=0;i<iNoExSynapses;i++)
     {
-
-        synapseEnsemble<synapseSW,NoSyns>* posynen = new synapseEnsemble<synapseSW,NoSyns>(h,osynEx);
-        synstest[i] = posynen; //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
+        //synapseEnsemble<synapseSW,NoSyns>* posynWb
+        arrKCsynsWb[i] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynEx); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
         //posynen->RegisterNeuron(ifn);
-        ifn->RegisterAfferent((ISynapseEnsemble*)(posynen)); //Let the nEuron Know a bundle of synapses is connecting to it
+        ifn->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Let the nEuron Know a bundle of synapses is connecting to it
 
         //Create New Efferent / start IDs from 5+
         //PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
         pPsKC[i] = new PoissonNeuron(h,i+5,iTestFq,false);
+        pPsKC[i]->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Tell this neuron it has a target
 
     }
 
 
-    //Open Log file for Synapse Strength
-    ///Record Synapse Strengths
-    getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
-    char *buff = strcat(FilePath,"\\synsStrength.csv");
-
-    ofstream ofile(buff, ios::out );
-
-    ofile << "ID Source Target S" << endl;
-    //////LOG File Opened
-
     //Main Simulation Loop - Ends when Simulation time reached
+    //Need to Call StepSim Time on Each Neuron In the Network
     while (cnt < uiSimulationTime)
     {
         timetolog--;
@@ -168,22 +165,24 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
             pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
             pPsKC[i]->StepSimTime();
 
-            if (pPsKC[i]->ActionPotentialOccured())
-            {
-                synstest[i]->SpikeArrived(ISynapse::SPIKE_PRE);
-                (*ofiles["SpikeRasterLog"])  << pPsKC[i]->getID() << "\t" << t << endl;
-                spikecnt++;
-            }
-            else
-            {
-                synstest[i]->StepNoSpike();
-            }
+
+//            if (pPsKC[i]->ActionPotentialOccured())
+//            {
+//                arrKCsynsWb[i]->SpikeArrived(ISynapse::SPIKE_PRE);
+//                (*ofiles["SpikeRasterLog"])  << pPsKC[i]->getID() << "\t" << t << endl;
+//                spikecnt++;
+//            }
+//            else
+//            {
+//                arrKCsynsWb[i]->StepNoSpike();
+//            }
 
 
             //Log Strength of Every Exhitatory Synapse
             //if (timetolog==0 && i < iNoExSynapses) synstest[i]->logtofile(ofile);
         }
-        Vm = ifn->StepRK_UpdateVm();
+        ifn->StepSimTime();
+        Vm = ifn->getMembraneVoltage();
 
         //Log New Membrane Voltage
         (*ofiles["MBONLog"]) << t <<"\t" << Vm  << endl;
@@ -197,7 +196,7 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 
         if (timetolog==0)
         {
-            cout<< cnt<< " t: "<< t << " Vm:" <<  Vm << " Sj:" << synstest[0]->getAvgStrength() << " F Rate:" << ifn->getFireRate() << " Avg Rate:" << TotalPostSpikes/t <<endl;
+            cout<< cnt<< " t: "<< t << " Vm:" <<  Vm << " Sj:" << arrKCsynsWb[0]->getAvgStrength() << " F Rate:" << ifn->getFireRate() << " Avg Rate:" << TotalPostSpikes/t <<endl;
             //Log Poisson KC neurons
             //cout << "Ps 1: " << pPsKC[1]->getFireRate() << endl;
             timetolog=verboseperiod;
@@ -210,13 +209,141 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 
 
     //Plot Output
+    int ret = system(strPlotCmd.c_str());
+    if (ret >0)
+        cout << "\n GnuPlots Complete, check dat subfolder!)" << endl;
+
+    //Close Synapse Log File
+    delete ifn;
+
+    for (int i=0;i<(iNoExSynapses+iNoInhSynapses);i++)
+        delete  pPsKC[i];
+
+
+} // END Function IFNeuron
+
+
+
+/// \brief Instantiates N poisson excitatory neurons feeding onto an IF neuron , with no plasticity
+void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
+{
+    int	verboseperiod = 50000;
+    int timetolog = verboseperiod;
+    uint cnt=0;
+    int spikecnt = 0;
+    int TotalPostSpikes = 0; //Used to get the Average Post Rate
+
+    double t=0;
+    double Vm;
+    float gamma = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP);
+
+    cout << "---- Test IF Neuron  with Gamma: " << gamma << endl;
+
+
+    //Make Synapses of the Triad KC-DAN-MBON
+    //Synapse Array
+    synapseEnsemble<synapseSW,NoSynsWa> *arrKCsynsWa[1];//KC->DAN Synapses
+    synapseEnsemble<synapseSW,NoSynsWb> *arrKCsynsWb[iNoExSynapses+iNoInhSynapses];//KC->MBON Synapses
+    synapseEnsemble<synapseSW,NoSynsWg> *arrKCsynsWg[1];//MBON->DAN Synapses
+    synapseEnsemble<synapseSW,NoSynsWd> *arrKCsynsWd[1];//DAN->MBON Synapses
+
+
+    //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
+    //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,StartStrength,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-1,true); //This synapse is going to be copied into the ensemble
+
+    //Instantiate Network Neurons -KCs, DAN MBON
+    PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent
+
+    //Create IFNeuron for MBON
+    IFNeuron* pIfnMBON = new IFNeuron(h,1);
+    //DAN
+    IFNeuron* pIfnDAN = new IFNeuron(h,2);
+
+    /// Make Synaptic Connections
+    // Generate KC poisson Neurons - Create and register Exhitatory Synapses
+    for (int i=0;i<iNoExSynapses;i++)
+    {
+        //synapseEnsemble<synapseSW,NoSyns>* posynWb
+        arrKCsynsWb[i] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynEx); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
+        //Connect Synapse to Neuron - Let Neuron know that this synapses is connecting to it - This will also let the synapse know of the target neuron by calling posynen->RegisterNeuron(ifn);
+        pIfnMBON->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Let the nEuron Know a bundle of synapses is connecting to it
+
+        //Create New Efferent / start IDs from 5+
+        //PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
+        pPsKC[i] = new PoissonNeuron(h,i+5,iTestFq,false);
+
+        //KC -> DAN Connections
+        synapseEnsemble<synapseSW,NoSynsWb>* psynKCDAN = new synapseEnsemble<synapseSW,NoSynsWa>(h,osynEx);
+        pIfnDAN->RegisterEfferent((ISynapseEnsemble*)psynKCDAN);
+
+    }
+
+
+
+    /// Main Simulation Loop - Ends when Simulation time reached
+    while (cnt < uiSimulationTime)
+    {
+        timetolog--;
+        t+=h;
+        cnt++;
+        //Run Through each afferent and Poisson Source
+        for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
+        {
+            pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
+            pPsKC[i]->StepSimTime();
+
+            if (pPsKC[i]->ActionPotentialOccured())
+            {
+                arrKCsynsWb[i]->SpikeArrived(ISynapse::SPIKE_PRE);
+                (*ofiles["SpikeRasterLog"])  << pPsKC[i]->getID() << "\t" << t << endl;
+                spikecnt++;
+            }
+            else
+            {
+                arrKCsynsWb[i]->StepNoSpike();
+            }
+
+
+            //Log Strength of Every Exhitatory Synapse
+            //if (timetolog==0 && i < iNoExSynapses) synstest[i]->logtofile(ofile);
+        }
+        Vm = pIfnMBON->StepRK_UpdateVm();
+
+        //Log New Membrane Voltage
+        (*ofiles["MBONLog"]) << t <<"\t" << Vm  << endl;
+
+        if (pIfnMBON->ActionPotentialOccured())
+        {
+            TotalPostSpikes++;
+            (*ofiles["SpikeRasterLog"])  << pIfnMBON->getID() << "\t" << t << endl;
+        }
+
+
+        if (timetolog==0)
+        {
+            cout<< cnt<< " t: "<< t << " Vm:" <<  Vm << " Sj:" << arrKCsynsWb[0]->getAvgStrength() << " F Rate:" << pIfnMBON->getFireRate() << " Avg Rate:" << TotalPostSpikes/t <<endl;
+            //Log Poisson KC neurons
+            //cout << "Ps 1: " << pPsKC[1]->getFireRate() << endl;
+            timetolog=verboseperiod;
+
+        }
+
+    }
+    cout << endl << " End. Spike Count: " << spikecnt << " Neuron Fire Rate: " << pIfnMBON->getFireRate() << " Avg Rate:" << TotalPostSpikes/t;
+    cout << " Total time: " << t << " sec" << endl;
+
+
+    //Plot Output
     system(strPlotCmd.c_str());
 
     //Close Synapse Log File
-    ofile.close();
-    delete ifn;
-    //delete  &synstest;
-    //delete &Ps;
+
+    delete pIfnMBON;
+    delete pIfnDAN;
+
+    delete[]  pPsKC;
 
 
-}
+} // END Function IFNeuron

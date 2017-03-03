@@ -19,6 +19,7 @@
 template<class T,int N>
 synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short sourceID,short ID)
 {
+    mID                     = ID;
     mbNoPlasticity          = true; //Switch Off Plasticity By Default
     mfSimTimestep           = simTimeStep;
 
@@ -27,7 +28,7 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short sourceID,short ID)
     msourceID               = sourceID;
     mtargetID               = 0;
     mpTargetNeuron          = 0; //Init Pointer to 0
-
+    bSpikeOccured           = false;
 }
 
 
@@ -40,10 +41,7 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short sourceID,short ID)
 
 template<class T,int N> float synapseEnsemble<T,N>::SpikeArrived(ISynapse::SPIKE_SITE type)
 {
-       double totalWeight=0;
-
-
-
+       double totalWeight=0.0;
 
        ///Only obtain the Average When using Switch Rule
 #ifndef USE_SONG_LEARNING
@@ -62,7 +60,8 @@ template<class T,int N> float synapseEnsemble<T,N>::SpikeArrived(ISynapse::SPIKE
        //mfAvgStrength = totalWeight; // No Averaging  ///miSynapsesCount;
 #endif
        //Reset Time since last spike
-       mdTimeSinceLastSpike = 0;
+       mdTimeSinceLastSpike = 0.0;
+       bSpikeOccured        = true;
 
        //Propagate Spike to Neuron if Target exists
        if (mpTargetNeuron && type == ISynapse::SPIKE_SITE::SPIKE_PRE)
@@ -116,14 +115,24 @@ int  synapseEnsemble<T,N>::getSynapsesCount()
 	return miSynapsesCount;
 }
 
-/// \brief When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
+/// \brief Register a pointer to the Target neuron receiving the impulses - When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
 /// \note Called By TargetNeuron
 template<class T,int N>
-void  synapseEnsemble<T,N>::RegisterNeuron(INeuron* pTargetN)
+void  synapseEnsemble<T,N>::RegisterAfferentNeuron(INeuron* pTargetN)
 {
 	mpTargetNeuron = pTargetN; //Synapse now connected to post Neuron	
 	mtargetID = pTargetN->getID();
 }
+
+/// \brief Register Pointer To Source Neuron Providing the impulses - When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
+/// \note Called By
+template<class T,int N>
+void  synapseEnsemble<T,N>::RegisterEfferentNeuron(INeuron* pSourceN)
+{
+    mpSourceNeuron = pSourceN; //Synapse now connected to post Neuron
+    msourceID = pSourceN->getID();
+}
+
 template<class T,int N>
 short synapseEnsemble<T,N>::getsourceID()
 {

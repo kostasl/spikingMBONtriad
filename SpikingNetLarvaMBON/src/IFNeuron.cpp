@@ -12,7 +12,7 @@
 /// \todo: When Using the Spike Stack need to extend to Have a seperate Stack for Inhibitory Injections
 
 #include "stdafx.h"
-#include "math.h"
+#include <gsl/gsl_math.h>
 #include "synapseSW.h"
 #include "synapseEnsemble.h"
 #include "synapticTransmission.h"
@@ -64,6 +64,8 @@ IFNeuron::IFNeuron(float timestep,short ID)
 
 }
 
+/// \brief Registers an incoming (afferent) synapse that provides impulses to this neuron
+/// notifies the synapse ensemble that this neuron is its target
 void IFNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
 	//Check that the array is not Maxed.
@@ -81,11 +83,38 @@ void IFNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
         abort();
     }
 	//Register Back to the Synapse Ensemble
-    pSyn->RegisterNeuron(this);
+    pSyn->RegisterAfferentNeuron(this);
 	//Add to private array
     mAfferents[iLastSynapseIndex] = pSyn;
 	iLastSynapseIndex++;
 }
+
+
+/// \brief Registers an incoming (afferent) synapse that provides impulses to this neuron
+/// notifies the synapse ensemble that this neuron is its target
+void IFNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
+{
+    //Check that the array is not Maxed.
+    if (iLastSynapseIndex == (MAX_AFFERENTS-1))
+    {
+        std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
+        abort();
+        throw "Max afferent number reached, Increase MAX_AFFERENTS ";
+        //Can have code to increase array size with malloc()
+    }
+
+    if (!pSyn)
+    {
+        std::cerr << "missing synapse ensemble pointer!" << std::endl;
+        abort();
+    }
+    //Register Back to the Synapse Ensemble
+    pSyn->RegisterEfferentNeuron(this);
+    //Add to private array
+    mAfferents[iLastSynapseIndex] = pSyn;
+    iLastSynapseIndex++;
+}
+
 
  //Called by SynapseEnsemble
 //Adds the Spike to the list of current transmitting spikes
@@ -238,7 +267,7 @@ double IFNeuron::SumInhInjections(float Dt)
 
 void IFNeuron::StepSimTime()
 {
-
+    StepRK_UpdateVm();
 }
 
 //Solve the Diff Equation , Step Time Fwd Returns the new Membrane V
@@ -320,16 +349,33 @@ double IFNeuron::StepRK_UpdateVm(void)
 
 	return Vm;
 }
+
+double IFNeuron::getMembraneVoltage()
+{
+    return Vm;
+}
+
 ///Sends the post Synaptic event Back to the Registered Synapses
 void IFNeuron::ActionPotentialEvent()
 {
+
 	bPostspiketoLog = true;
-	for(unsigned int i=0;i<iLastSynapseIndex;i++)
-	{
-        if (!mAfferents[i]) break; //Null so Next
-		//Notify all synapses (Time steps Fwd?)
-        mAfferents[i]->SpikeArrived(ISynapse::SPIKE_POST);
-	}
+
+    //double nRate= 0; //Loop until the largest index is passed between the Afferent / Efferent Synapse Lists
+    for(unsigned int i=0;i< GSL_MAX(iLastSynapseIndex,iLastSourceSynapseIndex);i++)
+    {
+        if (!mAfferents[i] &&  !mEfferents[i]) break; //Null so Next - So Skip Loop
+
+        //Notify all synapses (Time steps Fwd?)
+        if (mAfferents[i])
+            mAfferents[i]->SpikeArrived(ISynapse::SPIKE_POST); //incoming synapses receive A spike (BAP) at the post synaptic site
+
+        if (mEfferents[i])
+            mEfferents[i]->SpikeArrived(ISynapse::SPIKE_PRE); //OutGoing Synapses Receive A pre Spike
+
+        ///Deprecated :nRate+= mSynapses[i]->getSourceFireRate()*mSynapses[i]->getAvgStrength();
+    }
+
 
 #ifdef VERBOSE
 	std::cout << std::endl << "-* Neuron POST Spike ";
@@ -369,11 +415,11 @@ IFNeuron::~IFNeuron(void)
 		delete mSpikes[i];
 	}
 
-//Delete SynapseEnsembles
+//Delete SynapseEnsembles //Already Deleted
 	for(unsigned int i=0;i<iLastSynapseIndex;i++)
 	{
-        if (!mAfferents[i]) continue; //Null so Next
-        delete mAfferents[i];
+ //       if (!mAfferents[i]) continue; //Null so Next
+//        delete mAfferents[i];
         mAfferents[i] = 0;
 	}
 

@@ -52,14 +52,16 @@ float PoissonSource::getRate()
 }
 
 //gaussian distribution
-double PoissonSource::randGauss( double min, double max, double sigma, double centre)
+double PoissonSource::randGauss(  double sigma)
 {
-/*double random = (min + (max-min) * (double)rand()/RAND_MAX); //create random domain between [min,max]
+/*
+ * double random = (min + (max-min) * (double)rand()/RAND_MAX); //create random domain between [min,max]
 
 double tmp = (random-centre)/sigma; 
 double gauss = exp(-tmp*tmp/2); //gaussian formula
 */
-//Use Chi Square distribution with 2 degrees of freedom
+
+//Or?/ Use Chi Square distribution with 2 degrees of freedom
 double r1 = (double)rand()/RAND_MAX;
 double r2 = (double)rand()/RAND_MAX;
 

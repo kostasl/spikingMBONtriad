@@ -13,16 +13,18 @@ class IFNeuron: public INeuron
 {
 public:
 	IFNeuron(float timestep,short ID=0);
-    virtual double StepRK_UpdateVm(void);
     virtual void StepSimTime();
     virtual void RegisterAfferent(ISynapseEnsemble* s); //adds Afferent to array and registers target neuron with it
+    virtual void RegisterEfferent(ISynapseEnsemble* s); //adds Efferent to array and registers source neuron with synapse
     virtual void SpikeArrived(synapticTransmission* s); //Called by SynapseEnsemble
     virtual void ActionPotentialEvent(); //Called when neuron reaches threshold
     virtual bool ActionPotentialOccured();
     virtual void Reset();
-    virtual float  getFireRate(); //Returns the number of Spikes In the previous Elapsed second
+    virtual float getFireRate(); //Returns the number of Spikes In the previous Elapsed second
     virtual int getID(void);
     virtual ~IFNeuron(void);
+    double StepRK_UpdateVm(void);
+    double getMembraneVoltage();
 	
 private:
 	short ClearSpikeList();//Searches and removes expired spikes
@@ -42,7 +44,11 @@ private:
 	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
 	unsigned short msLastFireRate; //The number of spikes during the last second
     ISynapseEnsemble* mAfferents[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
-	unsigned int iLastSynapseIndex;
+    unsigned int iLastSynapseIndex;
+
+    ISynapseEnsemble* mEfferents[MAX_AFFERENTS]; //pointer to array of Efferent (source) synapses to this neuron
+    unsigned int iLastSourceSynapseIndex;
+
 	synapticTransmission* mSpikes[MAX_SPIKES]; //Pointer to Spike Members array
 	int iLastSpikeIndex;
 	bool bPrespiketoLog; //True When A pre Spike Occurs, reset when the spike is logged

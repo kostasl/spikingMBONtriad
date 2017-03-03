@@ -43,7 +43,7 @@
 
 /// \section Function Prototypes
 void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime);
-
+void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime);
 
 
 #endif

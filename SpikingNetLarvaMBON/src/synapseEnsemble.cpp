@@ -67,7 +67,15 @@ template<class T,int N> float synapseEnsemble<T,N>::SpikeArrived(ISynapse::SPIKE
        if (mpTargetNeuron && type == ISynapse::SPIKE_SITE::SPIKE_PRE)
        {
            synapticTransmission* sp = new synapticTransmission((float)mfSimTimestep,mfAvgStrength);
-           if (mpTargetNeuron != 0) mpTargetNeuron->SpikeArrived(sp); //Spike Is passed to Neuron
+           //Debug
+           //if (mfAvgStrength < 0.0)
+//           {
+  //             if (mpTargetNeuron != 0) mpTargetNeuron->SpikeArrived(sp); //Spike Is passed to Neuron
+    //       }
+      //     else
+           {
+                if (mpTargetNeuron != 0) mpTargetNeuron->SpikeArrived(sp); //Spike Is passed to Neuron
+           }
 
 
        }
@@ -179,5 +187,7 @@ synapseEnsemble<T,N>::~synapseEnsemble(void)
 ///
 template class synapseEnsemble<synapseSW,1>;
 template class synapseEnsemble<synapseSW,10>;
+template class synapseEnsemble<synapseSW,20>;
+template class synapseEnsemble<synapseSW,30>;
 template class synapseEnsemble<synapseSW,50>;
 template class synapseEnsemble<synapseSW,100>;

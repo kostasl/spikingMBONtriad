@@ -44,10 +44,11 @@ private:
 	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
 	unsigned short msLastFireRate; //The number of spikes during the last second
     ISynapseEnsemble* mAfferents[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
-    unsigned int iLastSynapseIndex;
+    unsigned int iLastAfferentSynapseIndex;
+
 
     ISynapseEnsemble* mEfferents[MAX_AFFERENTS]; //pointer to array of Efferent (source) synapses to this neuron
-    unsigned int iLastSourceSynapseIndex;
+    unsigned int iLastEfferentSynapseIndex;
 
 	synapticTransmission* mSpikes[MAX_SPIKES]; //Pointer to Spike Members array
 	int iLastSpikeIndex;

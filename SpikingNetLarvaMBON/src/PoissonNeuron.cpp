@@ -19,7 +19,7 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
     bPostspiketoLog     = false;
 	h					= timestep;	
 	mID					= ID;
-	iLastSynapseIndex	= 0;
+    iLastEfferentSynapseIndex	= 0;
 	msNumberOfSpikesInPeriod = 0;
 	mfPeriodOfSpikeCount	= 0.0f;
     //msLastFireRate			= StartFireRate;
@@ -49,7 +49,7 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
 void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
 	//Check that the array is not Maxed.
-	if (iLastSynapseIndex == (MAX_AFFERENTS-1))
+    if (iLastEfferentSynapseIndex == (MAX_AFFERENTS-1))
 	{
 		std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
 		abort();
@@ -61,8 +61,8 @@ void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 	//Register Back to the Synapse Ensemble
     pSyn->RegisterAfferentNeuron(this);
 	//Add to private array
-    mAfferents[iLastSynapseIndex] = pSyn;
-	iLastSynapseIndex++;
+    mAfferents[iLastEfferentSynapseIndex] = pSyn;
+    iLastEfferentSynapseIndex++;
 
 }
 
@@ -75,7 +75,7 @@ void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 void PoissonNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
 {
     //Check that the array is not Maxed.
-    if (iLastSourceSynapseIndex == (MAX_AFFERENTS-1))
+    if (iLastAfferentSynapseIndex == (MAX_AFFERENTS-1))
     {
         std::cout << "Max efferent number reached, Increase MAX_AFFERENTS ";
         abort();
@@ -87,8 +87,8 @@ void PoissonNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
     //Register Back to the Synapse Ensemble
     pSyn->RegisterEfferentNeuron(this);
     //Add to private array
-    mEfferents[iLastSourceSynapseIndex] = pSyn;
-    iLastSourceSynapseIndex++;
+    mEfferents[iLastAfferentSynapseIndex] = pSyn;
+    iLastAfferentSynapseIndex++;
 
 }
 
@@ -103,11 +103,11 @@ void PoissonNeuron::SpikeArrived(synapticTransmission* s)
 //Called on every Simulation step
 void PoissonNeuron::StepSimTime()
 {
-    float noise =0.0; // PoissonSource::randGauss(0,4.0f*sigma,sigma,2.0f*sigma);
-    bPostspiketoLog =false;
+    float noise         =   0.0; // PoissonSource::randGauss(0,4.0f*sigma,sigma,2.0f*sigma);
+    bPostspiketoLog     =   false;
 	//poisson spike draw
     //double r = (rand()/(double)RAND_MAX);
-    double r = gsl_rng_uniform(rng_r);
+    double r            = gsl_rng_uniform(rng_r);
     //if ((msLastFireRate*h) > r)
 
     mfPeriodOfSpikeCount+=h;
@@ -130,7 +130,7 @@ bool  PoissonNeuron::ActionPotentialOccured()
 void PoissonNeuron::ActionPotentialEvent() 
 {
     //double nRate= 0; //Loop until the largest index is passed between the Afferent / Efferent Synapse Lists
-    for(unsigned int i=0;i< GSL_MAX (iLastSynapseIndex,iLastSourceSynapseIndex);i++)
+    for(unsigned int i=0;i< GSL_MAX (iLastEfferentSynapseIndex,iLastAfferentSynapseIndex);i++)
 	{
         if (!mAfferents[i] &&  !mEfferents[i]) break; //Null so Next - So Skip Loop
 

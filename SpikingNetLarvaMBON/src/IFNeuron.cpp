@@ -22,9 +22,9 @@
 IFNeuron::IFNeuron(float timestep,short ID)
 {
 	mID					= ID;
-	iLastSynapseIndex	= 0;
-	iLastSpikeIndex		= 0;
-	Eex					= 0; //mV
+    iLastEfferentSynapseIndex	= 0;
+    iLastSpikeIndex		= 0.0;
+    Eex					= 0.0; //mV
 	Ein					= -0.070;//mV
 	Vrest				= -0.070;//mV
     Vspike              = 0.020;//Brief t=1 Spike Potential (Delta like)
@@ -40,8 +40,8 @@ IFNeuron::IFNeuron(float timestep,short ID)
 	h					= timestep;	
 
 	//SONG Model - Conductance Variables
-	gex_song			= 0;//Start Value
-	gin_song			= 0;
+    gex_song			= 0.0;//Start Value
+    gin_song			= 0.0;
 	gmax				= G_MAX;		
 	//gex_a				= 0.02; 
 	
@@ -64,12 +64,12 @@ IFNeuron::IFNeuron(float timestep,short ID)
 
 }
 
-/// \brief Registers an incoming (afferent) synapse that provides impulses to this neuron
+/// \brief Registers an incoming pathway (afferent) synapse that provides impulses to this neuron
 /// notifies the synapse ensemble that this neuron is its target
 void IFNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
 	//Check that the array is not Maxed.
-	if (iLastSynapseIndex == (MAX_AFFERENTS-1))
+    if (iLastAfferentSynapseIndex == (MAX_AFFERENTS-1))
 	{
 		std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
 		abort();
@@ -85,34 +85,31 @@ void IFNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 	//Register Back to the Synapse Ensemble
     pSyn->RegisterAfferentNeuron(this);
 	//Add to private array
-    mAfferents[iLastSynapseIndex] = pSyn;
-	iLastSynapseIndex++;
+    mAfferents[iLastAfferentSynapseIndex] = pSyn;
+    iLastAfferentSynapseIndex++;
 }
 
-
-/// \brief Registers an incoming (afferent) synapse that provides impulses to this neuron
-/// notifies the synapse ensemble that this neuron is its target
+/// \name RegisterEfferent
+/// \brief Save a pointer to an outgoing synapse  It connects to an efferent (target) neuron via the ensemble Synapse to this neuron
+/// \param A synapse Ensemble/set connecing the Afferent neuron to this neuron
 void IFNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
 {
     //Check that the array is not Maxed.
-    if (iLastSynapseIndex == (MAX_AFFERENTS-1))
+    if (iLastEfferentSynapseIndex == (MAX_AFFERENTS-1))
     {
-        std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
+        std::cout << "Max efferent number reached, Increase MAX_AFFERENTS ";
         abort();
-        throw "Max afferent number reached, Increase MAX_AFFERENTS ";
-        //Can have code to increase array size with malloc()
+        throw "Max efferent number reached, Increase MAX_AFFERENTS ";
+        /// \todo Can have code to increase array size with malloc() or convert to std vector
+
     }
 
-    if (!pSyn)
-    {
-        std::cerr << "missing synapse ensemble pointer!" << std::endl;
-        abort();
-    }
     //Register Back to the Synapse Ensemble
-    pSyn->RegisterEfferentNeuron(this);
+    pSyn->RegisterEfferentNeuron(this); //The Receiving Neuron
     //Add to private array
-    mAfferents[iLastSynapseIndex] = pSyn;
-    iLastSynapseIndex++;
+    mEfferents[iLastEfferentSynapseIndex] = pSyn;
+    iLastEfferentSynapseIndex++;
+
 }
 
 
@@ -127,7 +124,11 @@ void IFNeuron::SpikeArrived(synapticTransmission* Spike)
 	#ifdef USE_SONG_CONDUCTANCE
 		#ifndef USE_SONG_LEARNING 
 			//Using Switch Rule
+        if (Spike->getSynapseStrength() > 0.0)
 			gex_song += Spike->getSynapseStrength()*gmax; //Add conductance step
+        else
+            gin_song += (-1)*Spike->getSynapseStrength()*gmax; //Add conductance step
+
 		#else
 			//Using Song Learning
 			double fInjection;
@@ -137,7 +138,7 @@ void IFNeuron::SpikeArrived(synapticTransmission* Spike)
 			if (fInjection > 0)
 				gex_song += fInjection; //Will use the M(t),P(t) update rule
 			else
-				gin_song -= fInjection; //Substract cause Injection is -ve
+                gin_song -= fInjection; //Substract cause Injection is -ve
 				//SONG Learning will be found in the SynapseEnsemble
 
 
@@ -260,8 +261,9 @@ double IFNeuron::SumInhInjections(float Dt)
 {
 #ifdef USE_SONG_CONDUCTANCE	
 	 
-	return gin_song*exp(-Dt/tafs);
+    return gin_song*exp((double)-Dt/(double)tafs);
 #endif
+    ///\todo Missing inh Spikes Summation
 	return 0;
 }
 
@@ -274,7 +276,7 @@ void IFNeuron::StepSimTime()
 double IFNeuron::StepRK_UpdateVm(void)
 {
 	double gex,gin,k1,k2,k3,k4;
-	double dV=0;
+    double dV=0.0;
 	bPostspiketoLog = false;
 
 	ClearSpikeList();
@@ -328,11 +330,14 @@ double IFNeuron::StepRK_UpdateVm(void)
 		//COunt POst Rate
 		   mfPeriodOfSpikeCount+=h;
 
-		//1 second Elapsed? Reset Period
+        //Mean Period Elapsed? Reset Period
 		if (mfPeriodOfSpikeCount > IFFIRERATE_PERIOD){
-			//mfPeriodOfSpikeCount = 0;
+            msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
+
+            mfPeriodOfSpikeCount = 0.0;
+            msNumberOfSpikesInPeriod = 0;
 			//msLastFireRate = msNumberOfSpikesInPeriod;
-			//msNumberOfSpikesInPeriod=0;
+
 		}
 
 	///Threshold Reached - Fire Action Potential
@@ -362,15 +367,15 @@ void IFNeuron::ActionPotentialEvent()
 	bPostspiketoLog = true;
 
     //double nRate= 0; //Loop until the largest index is passed between the Afferent / Efferent Synapse Lists
-    for(unsigned int i=0;i< GSL_MAX(iLastSynapseIndex,iLastSourceSynapseIndex);i++)
+    for(unsigned int i=0;i< GSL_MAX(iLastEfferentSynapseIndex,iLastAfferentSynapseIndex);i++)
     {
         if (!mAfferents[i] &&  !mEfferents[i]) break; //Null so Next - So Skip Loop
 
         //Notify all synapses (Time steps Fwd?)
-        if (mAfferents[i])
+        if (mAfferents[i]) //Notify Input pathways
             mAfferents[i]->SpikeArrived(ISynapse::SPIKE_POST); //incoming synapses receive A spike (BAP) at the post synaptic site
 
-        if (mEfferents[i])
+        if (mEfferents[i]) //Notify Output Pathway
             mEfferents[i]->SpikeArrived(ISynapse::SPIKE_PRE); //OutGoing Synapses Receive A pre Spike
 
         ///Deprecated :nRate+= mSynapses[i]->getSourceFireRate()*mSynapses[i]->getAvgStrength();
@@ -390,10 +395,10 @@ int IFNeuron::getID()
 
 float IFNeuron::getFireRate()
 {
-	msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
+    //msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
 
-	msNumberOfSpikesInPeriod=0; //Reset Counter
-	mfPeriodOfSpikeCount = 0;
+    //msNumberOfSpikesInPeriod=0; //Reset Counter
+    //mfPeriodOfSpikeCount = 0.0;
 	return msLastFireRate;
 }
 
@@ -416,7 +421,7 @@ IFNeuron::~IFNeuron(void)
 	}
 
 //Delete SynapseEnsembles //Already Deleted
-	for(unsigned int i=0;i<iLastSynapseIndex;i++)
+    for(unsigned int i=0;i<iLastEfferentSynapseIndex;i++)
 	{
  //       if (!mAfferents[i]) continue; //Null so Next
 //        delete mAfferents[i];

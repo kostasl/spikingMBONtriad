@@ -186,6 +186,8 @@ synapseEnsemble<T,N>::~synapseEnsemble(void)
 /// \brief Specific Template class instantiations required
 ///
 template class synapseEnsemble<synapseSW,1>;
+template class synapseEnsemble<synapseSW,2>;
+template class synapseEnsemble<synapseSW,5>;
 template class synapseEnsemble<synapseSW,10>;
 template class synapseEnsemble<synapseSW,20>;
 template class synapseEnsemble<synapseSW,30>;

@@ -46,7 +46,7 @@ FileMap ofiles;
 static const int iTestFq	= 30;
 static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
 static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
-static const uint IFSimulationTime = 10000000;//10000000;
+static const uint IFSimulationTime = 5000000;//10000000;
 static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
 static const int NoSynsWd	= 1;//Switch rule Ensemble's number of Synapses  DAN -> MBON
@@ -62,8 +62,8 @@ static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
 /// \todo
 static const float StartStrength = 10.0f;
-static const float fKCOscPeriod     = 10.0f; //Period of KC input Neuron Oscillation
-static const float fKCBaselineFq    = 20.0f; //Period of KC input Neuron Oscillation
+static const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
+static const float fKCBaselineFq    = 20.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
 
 static const string strPlotCmd = "gnuplot SpikeRaster.gplot";
 
@@ -255,7 +255,7 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
     synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,StartStrength,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-100.0,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-600.0,true); //This synapse is going to be copied into the ensemble
 
     //Instantiate Network Neurons -KCs, DAN MBON
     PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent

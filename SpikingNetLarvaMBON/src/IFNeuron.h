@@ -40,9 +40,9 @@ private:
 	float tafs; //conductance time constant
 
 	float h; //The Simulation Timestep
-	float mfPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
-	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
-	unsigned short msLastFireRate; //The number of spikes during the last second
+    uint uiPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
+    uint uiNumberOfSpikesInPeriod; //Count of Post Spike Occurances
+    float fMeanFireRate; //The number of spikes during the last second
     ISynapseEnsemble* mAfferents[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
     unsigned int iLastAfferentSynapseIndex;
 

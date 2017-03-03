@@ -24,8 +24,8 @@ IFNeuron::IFNeuron(float timestep,short ID)
 	mID					= ID;
     iLastEfferentSynapseIndex	= 0;
     iLastSpikeIndex		= 0.0;
-    Eex					= 0.0; //mV
-	Ein					= -0.070;//mV
+    Eex					= 0.0; //mV //Excitatory Reversal Potential
+    Ein					= -0.070;//mV //inhibitory Reversal Potential
 	Vrest				= -0.070;//mV
     Vspike              = 0.020;//Brief t=1 Spike Potential (Delta like)
 #ifdef USE_SONG_LEARNING
@@ -47,9 +47,9 @@ IFNeuron::IFNeuron(float timestep,short ID)
 	
 	//Statistics
 
-	msNumberOfSpikesInPeriod = 0;
-	mfPeriodOfSpikeCount	= 0.0f;
-	msLastFireRate			= 0;
+    uiNumberOfSpikesInPeriod = 0;
+    uiPeriodOfSpikeCount	= 0.0f;
+    fMeanFireRate			= 0.0f;
 
 #ifdef DEBUG_LOG
 	char *File = new char[50];
@@ -125,9 +125,9 @@ void IFNeuron::SpikeArrived(synapticTransmission* Spike)
 		#ifndef USE_SONG_LEARNING 
 			//Using Switch Rule
         if (Spike->getSynapseStrength() > 0.0)
-			gex_song += Spike->getSynapseStrength()*gmax; //Add conductance step
+            gex_song += Spike->getSynapseStrength()*G_MAX; //Add conductance step
         else
-            gin_song += (-1)*Spike->getSynapseStrength()*gmax; //Add conductance step
+            gin_song += Spike->getSynapseStrength()*G_INH; //Add conductance step
 
 		#else
 			//Using Song Learning
@@ -287,23 +287,23 @@ double IFNeuron::StepRK_UpdateVm(void)
 	//1 k1=hf(xn,yn)
 	gex = SumExInjections(0); //Spikes Don't Step fwd in time
 	gin = SumInhInjections(0);
-	dV=(1/tafm)*(Vrest-Vm+gex*(-Vm)+gin*(Ein-Vm));
+    dV=(1/tafm)*(Vrest-Vm+gex*(Eex-Vm)+gin*(Ein-Vm));
 	k1 = h*dV;
 
 	//2 k2=hf(xn+0.5h,yn+0.5k1)
 	gex = SumExInjections((float)(0.5*h));
 	gin = SumInhInjections((float)(0.5*h));
-	dV=(1/tafm)*(Vrest-(Vm+0.5*k1)+gex*(-Vm+0.5*k1) + gin*(Ein-Vm+0.5*k1));
+    dV=(1/tafm)*(Vrest-(Vm+0.5*k1)+gex*(Eex-Vm+0.5*k1) + gin*(Ein-Vm+0.5*k1));
 	k2 = h*(dV);
 
 	//3 k3=hf(xn+0.5h,yn+0.5k2)
-	dV=(1/tafm)*(Vrest-(Vm+0.5*k2)+gex*(-Vm+0.5*k2) + gin*(Ein-Vm+0.5*k2));	
+    dV=(1/tafm)*(Vrest-(Vm+0.5*k2)+gex*(Eex-Vm+0.5*k2) + gin*(Ein-Vm+0.5*k2));
 	k3= h*dV;
 
 	//4 k4=hf(xn+h,yn+k3)
 	gex = SumExInjections(); //Step Spike time Fwd by h /Like Calling SumExInjections(h)
 	gin = SumInhInjections();
-	dV=(1/tafm)*(Vrest-(Vm+k3)+gex*(-Vm+k3) + gin*(Ein-Vm+k3));	
+    dV=(1/tafm)*(Vrest-(Vm+k3)+gex*(Eex-Vm+k3) + gin*(Ein-Vm+k3));
 	k4 = h*dV;
 
 	//increment Time -> No need, done by spike time increment
@@ -327,23 +327,23 @@ double IFNeuron::StepRK_UpdateVm(void)
 		   out << " " << Vm << " " << gex << " " << iLastSpikeIndex << std::endl;
 		#endif
 
-		//COunt POst Rate
-		   mfPeriodOfSpikeCount+=h;
+        //COunt POst Rate Timer
+         uiPeriodOfSpikeCount++;
 
         //Mean Period Elapsed? Reset Period
-		if (mfPeriodOfSpikeCount > IFFIRERATE_PERIOD){
-            msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
 
-            mfPeriodOfSpikeCount = 0.0;
-            msNumberOfSpikesInPeriod = 0;
-			//msLastFireRate = msNumberOfSpikesInPeriod;
+         //Exponential Decay Of Running Average //Bin # Spike
+         if (uiPeriodOfSpikeCount > IFFIRERATE_PERIOD)
+         {
+            uiPeriodOfSpikeCount = 0;
+            uiNumberOfSpikesInPeriod = 0;
 
-		}
+        }
 
 	///Threshold Reached - Fire Action Potential
 	if (Vm>Vthres) 
 	{
-		msNumberOfSpikesInPeriod++;
+        uiNumberOfSpikesInPeriod++;
         //Vm=Vreset;
         Vm =Vspike;
 		ActionPotentialEvent(); //Send Post Syn Spike event back to Synapses
@@ -399,7 +399,11 @@ float IFNeuron::getFireRate()
 
     //msNumberOfSpikesInPeriod=0; //Reset Counter
     //mfPeriodOfSpikeCount = 0.0;
-	return msLastFireRate;
+    double alpha = 1/IFFIRERATE_PERIOD;
+    fMeanFireRate = (alpha*uiNumberOfSpikesInPeriod) + (1.0 - alpha) * fMeanFireRate;
+
+
+    return fMeanFireRate;
 }
 
 //Returns true if neuron has fired during previous Step

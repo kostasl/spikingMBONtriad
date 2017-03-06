@@ -43,7 +43,7 @@ FileMap ofiles;
 static const uint IFSimulationTime = 1000000;//10000000;
 static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
-static const int NoSynsWd	= 1;//Switch rule Ensemble's number of Synapses  DAN -> MBON
+static const int NoSynsWd	= 10;//Switch rule Ensemble's number of Synapses  DAN -> MBON
 static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
 
 //Kenyon Cells /Input Pattern

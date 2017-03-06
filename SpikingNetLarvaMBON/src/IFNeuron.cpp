@@ -127,7 +127,7 @@ void IFNeuron::SpikeArrived(synapticTransmission* Spike)
         if (Spike->getSynapseStrength() > 0.0)
             gex_song += Spike->getSynapseStrength()*G_MAX; //Add conductance step
         else
-            gin_song += Spike->getSynapseStrength()*G_INH; //Add conductance step
+            gin_song += (-1)*Spike->getSynapseStrength()*G_INH; //Add conductance step
 
 		#else
 			//Using Song Learning
@@ -313,7 +313,11 @@ double IFNeuron::StepRK_UpdateVm(void)
 
 	///END OF RUNGE-KUTTA - Process repeats at every time step h
 	//Check if threshold reached
-	
+
+    //Check
+    assert(Vm >= Vreset);
+     //stderr << "Numerical Error: Runaway inhibition?" << std::endl;
+
 	#ifdef VERBOSE
 		std::cout << "Vm: " << Vm <<std::endl;
 	#endif

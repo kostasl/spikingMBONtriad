@@ -10,6 +10,7 @@
 
 #define _USE_MATH_DEFINES //IN order to use Math COnstants
 #include <stdio.h>
+#include <assert.h>
 #include <stdlib.h> // for srand ( ) and rand ( ) 
 #include <cstring>
 #include <linux/limits.h> //For Constants Like PATH_MAX

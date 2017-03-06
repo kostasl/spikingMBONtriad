@@ -26,31 +26,37 @@
 
 
 //Function Prototypes
-
-
 using namespace std;
 
 //Simulation Time step
-//const float h=0.0002f;
 const double h=TIMESTEP;
 
 static char FilePath[_MAX_PATH]; // _MAX_PATH represents the longest possible path on this OS
 typedef std::map<std::string, std::ofstream*> FileMap;
 typedef FileMap::iterator Iterator;
 
-//declare map of log files - Used to Organize all output streams
+//Log Files - Declare map of log files - Used to Organize all output streams
 FileMap ofiles;
 
 
-//Variables for IFTEST
-static const int iTestFq	= 30;
-static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
-static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
-static const uint IFSimulationTime = 5000000;//10000000;
+/// Network Structure Variables
+static const uint IFSimulationTime = 1000000;//10000000;
 static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
 static const int NoSynsWd	= 1;//Switch rule Ensemble's number of Synapses  DAN -> MBON
 static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
+
+//Kenyon Cells /Input Pattern
+static const int iTestFq	= 30;
+static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
+static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
+static const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
+static const float fKCBaselineFq    = 20.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+
+
+/// Synaptic Strentgh
+static const float fExSynapseStartStrength = 20.0f;
+static const float fInSynapseStartStrength = -10.0f;
 
 
 //THESE PARAMETERS ONY AFFECT SWITCH RULE
@@ -60,10 +66,6 @@ static const float tafPOT	= 0.013f;
 static const float tafDEP	= 0.020f;
 static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
-/// \todo
-static const float StartStrength = 10.0f;
-static const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
-static const float fKCBaselineFq    = 20.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
 
 static const string strPlotCmd = "gnuplot SpikeRaster.gplot";
 
@@ -140,8 +142,8 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     //Create IFNeuron
     IFNeuron* ifn = new IFNeuron(h,1);
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
-    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,StartStrength,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-1,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,fExSynapseStartStrength,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,fInSynapseStartStrength,true); //This synapse is going to be copied into the ensemble
 
     //Create and register Exhitatory Synapses
     for (int i=0;i<iNoExSynapses;i++)
@@ -254,8 +256,8 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 
     //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
-    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,StartStrength,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-160.0,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,fExSynapseStartStrength,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-50.0,true); //This synapse is going to be copied into the ensemble
 
     //Instantiate Network Neurons -KCs, DAN MBON
     PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent

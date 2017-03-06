@@ -12,7 +12,7 @@ class synapticTransmission;
 class IFNeuron: public INeuron
 {
 public:
-	IFNeuron(float timestep,short ID=0);
+    IFNeuron(double timestep,short ID=0);
     virtual void StepSimTime();
     virtual void RegisterAfferent(ISynapseEnsemble* s); //adds Afferent to array and registers target neuron with it
     virtual void RegisterEfferent(ISynapseEnsemble* s); //adds Efferent to array and registers source neuron with synapse
@@ -39,7 +39,7 @@ private:
 	double tafm;
 	float tafs; //conductance time constant
 
-	float h; //The Simulation Timestep
+    double h; //The Simulation Timestep
     uint uiPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
     uint uiNumberOfSpikesInPeriod; //Count of Post Spike Occurances
     float fMeanFireRate; //The number of spikes during the last second

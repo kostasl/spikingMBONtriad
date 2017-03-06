@@ -33,9 +33,9 @@ private:
     float mlamda; /// \variable mlamda Rate of event Arrival
     double sigma; //Gaussian Noise StdDev in Sec
 
-	float mfPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
-	unsigned short msNumberOfSpikesInPeriod; //Count of Post Spike Occurances
-    unsigned short msLastFireRate; //The actual since the last call to getFireRate/ number of spikes during the last second
+    uint uiPeriodOfSpikeCount; //Used to increment up to A second to measure post rate
+    uint uiNumberOfSpikesInPeriod; //Count of Post Spike Occurances
+    float fMeanFireRate; //Measured Approximate using a rolling window over a fixed period
     ISynapseEnsemble* mAfferents[MAX_AFFERENTS]; //pointer to array of afferent synapses to this neuron
     unsigned int iLastAfferentSynapseIndex;
 
@@ -47,5 +47,7 @@ private:
     bool bPostspiketoLog; //True When POst event occurs, Reset when StepNoSpike Happens
 	time_t t; //Used for random num generation
 	gsl_rng * rng_r; //Used by GSL Rand Num Generator
+
+
 
 };

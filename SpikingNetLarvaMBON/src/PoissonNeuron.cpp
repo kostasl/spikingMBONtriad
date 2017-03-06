@@ -20,8 +20,8 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
 	h					= timestep;	
 	mID					= ID;
     iLastEfferentSynapseIndex	= 0;
-	msNumberOfSpikesInPeriod = 0;
-	mfPeriodOfSpikeCount	= 0.0f;
+    uiNumberOfSpikesInPeriod = 0;
+    uiPeriodOfSpikeCount	= 0.0f;
     //msLastFireRate			= StartFireRate;
     mlamda                  = StartFireRate;
 	mbFixedRate				= FixedRate;
@@ -110,13 +110,25 @@ void PoissonNeuron::StepSimTime()
     double r            = gsl_rng_uniform(rng_r);
     //if ((msLastFireRate*h) > r)
 
-    mfPeriodOfSpikeCount+=h;
-
     if ((mlamda*h + noise)> r)
     {
          ActionPotentialEvent();
-         msNumberOfSpikesInPeriod++;
+         uiNumberOfSpikesInPeriod++;
     }
+
+
+    //COunt POst Rate Timer
+     uiPeriodOfSpikeCount++;
+
+     //Mean Period Elapsed? Reset Period
+
+      //Exponential Decay Of Running Average //Bin # Spike
+      if (uiPeriodOfSpikeCount > IFFIRERATE_PERIOD)
+      {
+         uiPeriodOfSpikeCount = 0;
+         uiNumberOfSpikesInPeriod = 0;
+
+     }
 
 }
 
@@ -165,16 +177,18 @@ void PoissonNeuron::setFireRate(float newFireRate)
     mlamda         = newFireRate;
 }
 
-/// \brief Returns actual cound using the number of Spikes In the previous Elapsed second
+/// \brief Returns approximate mean fire rate count using the number of Spikes In the previous Elapsed second
 float PoissonNeuron::getFireRate()
 {
-    msLastFireRate = msNumberOfSpikesInPeriod/mfPeriodOfSpikeCount;
 
-    msNumberOfSpikesInPeriod=0; //Reset Counter
-    mfPeriodOfSpikeCount = 0;
-    return msLastFireRate;
 
-    //return mlamda;
+    //double alpha = 1.0/IFFIRERATE_PERIOD;
+    fMeanFireRate = (h*uiNumberOfSpikesInPeriod) + (1.0 - h) * fMeanFireRate;
+
+
+    return fMeanFireRate;
+
+
 
 }
 

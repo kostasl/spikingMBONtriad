@@ -32,7 +32,7 @@ using namespace std;
 
 //Simulation Time step
 //const float h=0.0002f;
-const float h=0.0001f;
+const double h=TIMESTEP;
 
 static char FilePath[_MAX_PATH]; // _MAX_PATH represents the longest possible path on this OS
 typedef std::map<std::string, std::ofstream*> FileMap;
@@ -242,7 +242,7 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     float gamma = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
 
     cout << "---- Test MBON Triad KCs->DAN<->MBON Neuron  with Synapse Switch rule Gamma: " << gamma << endl;
-
+    cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
 
     ///Make Synapses of the Triad KC-DAN-MBON
     //Synapse Array // Holding on to pointers for Reporting Reasons
@@ -255,7 +255,7 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
     synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,StartStrength,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-600.0,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-160.0,true); //This synapse is going to be copied into the ensemble
 
     //Instantiate Network Neurons -KCs, DAN MBON
     PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent
@@ -323,7 +323,7 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         //Log New Membrane Voltages
         (*ofiles["MBONLog"]) << t <<"\t" << pIfnMBON->getMembraneVoltage() << "\t" << pIfnMBON->getFireRate()  << endl;
         (*ofiles["DANLog"]) << t <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate()  << endl;
-
+        (*ofiles["KCLog"]) << t <<"\t 0 \t" << pPsKC[0]->getFireRate()  << endl;
 
         //Log Spikes
         if (pIfnMBON->ActionPotentialOccured())

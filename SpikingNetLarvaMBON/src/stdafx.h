@@ -33,7 +33,9 @@
 #define MAX_SPIKES	2500 //Number of simultanuous spike that can be injecting to the neuron
 #define G_MAX		0.0151  //0.015 //The Song Conductance Max VAlue used in IFNeuron And SynapseEnsemble
 #define G_INH		0.05 //0.05 //The Song INH Conductance Fixed VAlue used in IFNeuron And SynapseEnsemble
-#define IFFIRERATE_PERIOD 100000.0 ///The timesteps over which the IFNeuron calculates the Fire rate
+#define TIMESTEP    0.0005
+#define IFFIRERATE_PERIOD 1.0/TIMESTEP ///The timesteps over which the IFNeuron calculates the Fire rate
+
 //#define DEBUG_LOG
 #define USE_SONG_CONDUCTANCE //When Defined the simpler Song method is used to calculate gex
 //#define USE_SONG_LEARNING	// Synaptic modification implemented as the double exponential rule and switch rule is ignored.

@@ -19,7 +19,7 @@
 #include "INeuron.h"
 #include "IFNeuron.h"
 
-IFNeuron::IFNeuron(float timestep,short ID)
+IFNeuron::IFNeuron(double timestep,short ID)
 {
 	mID					= ID;
     iLastEfferentSynapseIndex	= 0;
@@ -288,28 +288,28 @@ double IFNeuron::StepRK_UpdateVm(void)
 	//1 k1=hf(xn,yn)
 	gex = SumExInjections(0); //Spikes Don't Step fwd in time
 	gin = SumInhInjections(0);
-    dV=(1/tafm)*(Vrest-Vm+gex*(Eex-Vm)+gin*(Ein-Vm));
+    dV=(1.0/tafm)*(Vrest-Vm+gex*(Eex-Vm)+gin*(Ein-Vm));
 	k1 = h*dV;
 
 	//2 k2=hf(xn+0.5h,yn+0.5k1)
 	gex = SumExInjections((float)(0.5*h));
 	gin = SumInhInjections((float)(0.5*h));
-    dV=(1/tafm)*(Vrest-(Vm+0.5*k1)+gex*(Eex-Vm+0.5*k1) + gin*(Ein-Vm+0.5*k1));
+    dV=(1.0/tafm)*(Vrest-(Vm+0.5*k1)+gex*(Eex-(Vm+0.5*k1)) + gin*(Ein-(Vm+0.5*k1)));
 	k2 = h*(dV);
 
 	//3 k3=hf(xn+0.5h,yn+0.5k2)
-    dV=(1/tafm)*(Vrest-(Vm+0.5*k2)+gex*(Eex-Vm+0.5*k2) + gin*(Ein-Vm+0.5*k2));
+    dV=(1.0/tafm)*(Vrest-(Vm+0.5*k2)+gex*(Eex-(Vm+0.5*k2)) + gin*(Ein-(Vm+0.5*k2)));
 	k3= h*dV;
 
 	//4 k4=hf(xn+h,yn+k3)
 	gex = SumExInjections(); //Step Spike time Fwd by h /Like Calling SumExInjections(h)
 	gin = SumInhInjections();
-    dV=(1/tafm)*(Vrest-(Vm+k3)+gex*(Eex-Vm+k3) + gin*(Ein-Vm+k3));
+    dV=(1.0/tafm)*(Vrest-(Vm+k3)+gex*(Eex-(Vm+k3)) + gin*(Ein-(Vm+k3)));
 	k4 = h*dV;
 
 	//increment Time -> No need, done by spike time increment
 	//Update yn -> yn+1
-	Vm+=(1/6.0f)*(k1+2*k2+2*k3+k4); //Update the membrane Potential
+    Vm+=(1.0/6.0)*(k1+2.0*k2+2.0*k3+k4); //Update the membrane Potential
 
 	///END OF RUNGE-KUTTA - Process repeats at every time step h
 	//Check if threshold reached
@@ -400,8 +400,8 @@ float IFNeuron::getFireRate()
 
     //msNumberOfSpikesInPeriod=0; //Reset Counter
     //mfPeriodOfSpikeCount = 0.0;
-    double alpha = 1/IFFIRERATE_PERIOD;
-    fMeanFireRate = (alpha*uiNumberOfSpikesInPeriod) + (1.0 - alpha) * fMeanFireRate;
+    //double alpha = 1.0/IFFIRERATE_PERIOD;
+    fMeanFireRate = (h*uiNumberOfSpikesInPeriod) + (1.0 - h) * fMeanFireRate;
 
 
     return fMeanFireRate;

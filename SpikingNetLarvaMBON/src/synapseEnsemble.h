@@ -3,15 +3,16 @@
 #include "math.h"
 #include "isynapse.h"
 #include "synapticTransmission.h"
-#include "INeuron.h"
+#include "isynapseensemble.h"
+//#include "INeuron.h"
 
 class IFNeuron; //Fwd Declaration
 class PoissonNeuron;
 class INeuron;
+//class ISynapseEnsemble;
 
 template <class T, int N>
-class synapseEnsemble
-{
+class synapseEnsemble:public ISynapseEnsemble {
 
 public:
     synapseEnsemble(float simTimeStep=0.0001f,short sourceID=0,short ID=0);
@@ -30,8 +31,6 @@ public:
     virtual void Reset(void);
 	//When a Neuron registers this SynapseEnsemble it will register also pass
 	// a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
-    virtual void RegisterAfferentNeuron(INeuron* pNeuron); //Save pointer to Target Neuron
-    virtual void RegisterEfferentNeuron(INeuron* pNeuron); //Save pointer to Source Neuron
     virtual short getsourceID();
     virtual short gettargetID();
 	void logtofile(std::ofstream &fs);//Passed an open filestream it will log the synapse strength
@@ -39,9 +38,10 @@ public:
 
 
 private:
+    void RegisterAfferentNeuron(INeuron* pNeuron); //Save pointer to Target Neuron
+    void RegisterEfferentNeuron(INeuron* pNeuron); //Save pointer to Source Neuron
+
 	short mID; //An ID externaly created to identify the synapse in a population synapsing on the same Neuron
-	short msourceID; //An Id for the source of this synapse - Target ID is taken from RegisterTarget
-	short mtargetID; 
 	double mfSimTimestep;//The simulation time step in seconds
 	double mdTimeSinceLastSpike; //In Seconds
 	double mfAvgStrength; //Was Float made into Double
@@ -51,8 +51,6 @@ private:
 
 	bool mbNoPlasticity;
     bool bSpikeOccured;
-	INeuron* mpTargetNeuron;
-    INeuron* mpSourceNeuron;
     T arrSynapses[N]; //Initialize memory Array
 
 	///Song Model
@@ -70,6 +68,7 @@ private:
 template<class T,int N>
 synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep, ISynapse& osynapse)
 {
+        ISynapseEnsemble::ISynapseEnsemble();
        // mbNoPlasticity      = bNoPlasticity; //True : Do not Modify mfAvgStrength
         //msourceID           = sourceID;
         //mSourceFireRate     = SourceFireRate;
@@ -104,7 +103,7 @@ synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep, ISynapse& osynapse)
 
         //Reset Time since last spike
         mdTimeSinceLastSpike    = 0.0;
-        mpTargetNeuron          = 0; //Init Pointer to 0
+
         mfAvgStrength           = mfStartStrength*N;
 
 }

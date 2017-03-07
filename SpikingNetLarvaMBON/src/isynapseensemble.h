@@ -9,7 +9,7 @@
 #ifndef ISYNAPSEENSEMBLE_H
 #define ISYNAPSEENSEMBLE_H
 
-#include "INeuron.h"
+//#include "INeuron.h"
 
 //Forward Declaration
 class INeuron;
@@ -30,12 +30,21 @@ public:
     virtual void Reset(void)=0;
 
     ///  \brief When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
-    virtual void RegisterAfferentNeuron(INeuron* pNeuron)=0; //Target
-    virtual void RegisterEfferentNeuron(INeuron* pNeuron)=0; //Source
     virtual short getsourceID()=0;
     virtual short gettargetID()=0;
 
     virtual ~ISynapseEnsemble();
+
+
+    void RegisterAfferentNeuron(INeuron* pNeuron); //Target
+    void RegisterEfferentNeuron(INeuron* pNeuron); //Source
+
+protected:
+    short msourceID; //An Id for the source of this synapse - Target ID is taken from RegisterTarget
+    short mtargetID;
+    INeuron* mpTargetNeuron;
+    INeuron* mpSourceNeuron;
+
 
 };
 

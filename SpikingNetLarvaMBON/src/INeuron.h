@@ -23,5 +23,7 @@ public:
     virtual void StepSimTime()=0;
     virtual int getID(void)=0;
 
+
+    friend class ISynapseEnsemble; //Allows Access to RegisterAfferentNeuron
     virtual ~INeuron(void);
 };

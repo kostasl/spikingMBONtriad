@@ -41,7 +41,7 @@ FileMap ofiles;
 
 /// Network Structure Variables
 static const uint IFSimulationTime = 1000000;//10000000;
-static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
+static const int NoSynsWa	= 0;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
 static const int NoSynsWd	= 10;//Switch rule Ensemble's number of Synapses  DAN -> MBON
 static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
@@ -231,17 +231,20 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 /// - These feeding onto an IF MBON neurons as well as onto a IF. DAN
 /// \returns spike raster (MBON ID = 1, DAN =2, KCs have >5) of whole network, and membrane voltages of the 2 IF neurons
 /// There is no no plasticity activated.
+/// \note Adding a new neuron to the network requires its instantiation (either Poisson or IF), then a make a synapseensemble to connect the two.
+/// then call Registering Efferent at source neuron A and call RegisterEfferent on target neuron B
 void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
-    int	verboseperiod = 50000; //Report to Our every 5 secs
-    int timetolog = verboseperiod;
-    uint cnt     = 0; //Current Timestep
-    int spikecnt = 0; //input Spikes Count
+    int RinputFq        = 50;
+    int	verboseperiod   = 50000; //Report to Our every 5 secs
+    int timetolog       = verboseperiod;
+    uint cnt            = 0; //Current Timestep
+    int spikecnt        = 0; //input Spikes Count
     int TotalPostSpikes = 0; //Output (MBON)Used to get the Average Post Rate
 
     double t            = 0; //Simulated Time in seconds
 
-    float gamma = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
+    float gamma         = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
 
     cout << "---- Test MBON Triad KCs->DAN<->MBON Neuron  with Synapse Switch rule Gamma: " << gamma << endl;
     cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
@@ -289,6 +292,11 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 
     }
 
+    //Add Reward Input to DAN
+    PoissonNeuron* pPsR = new  PoissonNeuron(h,3,RinputFq,true);
+    synapseEnsemble<synapseSW,1>* osynR = new synapseEnsemble<synapseSW,1>(h,osynEx);
+    pPsR->RegisterEfferent((ISynapseEnsemble*)osynR); //Target Neuron is The DAN
+    pIfnDAN->RegisterAfferent((ISynapseEnsemble*)osynR); //Register as outgoing Synapse
 
     //Add DAN ->MBON Synapse
     arrMBONsynsWd[0] = new synapseEnsemble<synapseSW,NoSynsWd>(h,osynIn); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
@@ -317,6 +325,7 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
             //Log Strength of Every Exhitatory Synapse
             //if (timetolog==0 && i < iNoExSynapses) synstest[i]->logtofile(ofile);
         }
+        pPsR->StepSimTime();
         pIfnMBON->StepSimTime();
         pIfnDAN->StepSimTime();
 
@@ -335,7 +344,6 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         }
         if (pIfnDAN->ActionPotentialOccured())
         {
-            TotalPostSpikes++;
             (*ofiles["SpikeRasterLog"])  << pIfnDAN->getID() << "\t" << t << endl;
         }
 
@@ -360,10 +368,13 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     int iret = system(strPlotCmd.c_str());
     cout << endl << "Gnuplot Returned :" << iret << endl;
 
-    //Close Synapse Log File
 
+    //Free up memory
     delete pIfnMBON;
     delete pIfnDAN;
+    delete pPsR;
+
+    //Close Synapse Log File
 
     for (int i=0;i<(iNoExSynapses+iNoInhSynapses);i++)
         delete  pPsKC[i];

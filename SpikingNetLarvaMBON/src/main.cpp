@@ -42,10 +42,10 @@ FileMap ofiles;
 
 /// Network Structure Variables
 static const uint IFSimulationTime = 1000000;//10000000;
-static const int NoSynsWa	= 0;//Switch rule Ensemble's number of Synapses KC->DAN
+static const int NoSynsWa	= 1;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
 static const int NoSynsWz	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
-static const int NoSynsWd	= 10;//Switch rule Ensemble's number of Synapses  DAN -> MBON
+static const int NoSynsWd	= 1;//Switch rule Ensemble's number of Synapses  DAN -> MBON
 static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
 
 //Kenyon Cells /Input Pattern
@@ -53,7 +53,8 @@ static const int iTestFq	= 30;
 static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
 static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
 static const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
-static const float fKCBaselineFq    = 0.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+static const float fKCOscAmplitude  = 20.0f;
+static const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
 
 
 //THESE PARAMETERS ONY AFFECT SWITCH RULE
@@ -171,7 +172,7 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         //Run Through each afferent and Poisson Source
         for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
         {
-            pPsKC[i]->setFireRate( fKCBaselineFq + 0.0*sin(2*M_PI*t/fKCOscPeriod));
+            pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
             pPsKC[i]->StepSimTime();
             //Log Spike
             if (pPsKC[i]->ActionPotentialOccured())
@@ -235,23 +236,31 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 /// then call Registering Efferent at source neuron A and call RegisterEfferent on target neuron B
 void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
-    int RinputFq        = 60;
-    int	verboseperiod   = 50000; //Report to Our every 5 secs
+
+    //Kenyon Cells /Input Pattern
+    const int iTestFq           = 30;
+
+    const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
+    const float fKCOscAmplitude  = 20.0f;
+    const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+
+    const int RinputFq        = 20;
+    const int verboseperiod   = 50000; //Report to Our every 5 secs
+
     int timetolog       = verboseperiod;
     uint cnt            = 0; //Current Timestep
     int spikecnt        = 0; //input Spikes Count
     int TotalPostSpikes = 0; //Output (MBON)Used to get the Average Post Rate
 
     double t            = 0; //Simulated Time in seconds
-
-    float gamma         = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
+    const float gamma   = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
 
     /// Synaptic Parameters  - No Plasticity - Just define Strentgh
     //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
     synapseSW osynWa(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWb(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,20,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWb(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-100,true); //This synapse is going to be copied into the ensemble
     synapseSW osynWd(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
     synapseSW osynWz(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-10,true); //This synapse is going to be copied into the ensemble
     synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,50,true); //This synapse is going to be copied into the ensemble
@@ -335,7 +344,7 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
         //Run Through each afferent and Poisson Source
         for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
         {
-            pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
+            pPsKC[i]->setFireRate( fKCBaselineFq + fKCOscAmplitude*sin(2*M_PI*t/fKCOscPeriod));
             pPsKC[i]->StepSimTime();
 
             if (pPsKC[i]->ActionPotentialOccured())

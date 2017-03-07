@@ -43,6 +43,7 @@ FileMap ofiles;
 static const uint IFSimulationTime = 1000000;//10000000;
 static const int NoSynsWa	= 0;//Switch rule Ensemble's number of Synapses KC->DAN
 static const int NoSynsWb	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
+static const int NoSynsWz	= 1;//Switch rule Ensemble's number of Synapses KCs->MBON
 static const int NoSynsWd	= 10;//Switch rule Ensemble's number of Synapses  DAN -> MBON
 static const int NoSynsWg	= 1;//Switch rule Ensemble's number of Synapses MBON -> DAN
 
@@ -51,12 +52,7 @@ static const int iTestFq	= 30;
 static const int iNoExSynapses = 10; //Number of synapses to test IFNeuron
 static const int iNoInhSynapses = 0;//200; //Inhibitory synapses
 static const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
-static const float fKCBaselineFq    = 20.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
-
-
-/// Synaptic Strentgh
-static const float fExSynapseStartStrength = 20.0f;
-static const float fInSynapseStartStrength = -10.0f;
+static const float fKCBaselineFq    = 0.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
 
 
 //THESE PARAMETERS ONY AFFECT SWITCH RULE
@@ -104,7 +100,7 @@ int main(int argc, char *argv[])
     (*ofiles["KCLog"]) << "#t\tVm\tSpikeRate"  << endl;
 
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
-    testMBONTriad(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
+    testMBONTriadConfigA(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
 
    // Close all files
     for(Iterator it = ofiles.begin(); it != ofiles.end(); ++it) {
@@ -121,6 +117,9 @@ int main(int argc, char *argv[])
 /// plots in the dat subfolder
 void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
+    const float fExSynapseStartStrength = 50;
+    const float fInSynapseStartStrength = -50;
+
     int	verboseperiod = 50000;
     int timetolog = verboseperiod;
     uint cnt=0;
@@ -171,7 +170,7 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
         //Run Through each afferent and Poisson Source
         for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
         {
-            pPsKC[i]->setFireRate( fKCBaselineFq + 10.0*sin(2*M_PI*t/fKCOscPeriod));
+            pPsKC[i]->setFireRate( fKCBaselineFq + 0.0*sin(2*M_PI*t/fKCOscPeriod));
             pPsKC[i]->StepSimTime();
             //Log Spike
             if (pPsKC[i]->ActionPotentialOccured())
@@ -233,9 +232,9 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 /// There is no no plasticity activated.
 /// \note Adding a new neuron to the network requires its instantiation (either Poisson or IF), then a make a synapseensemble to connect the two.
 /// then call Registering Efferent at source neuron A and call RegisterEfferent on target neuron B
-void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
+void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
-    int RinputFq        = 50;
+    int RinputFq        = 60;
     int	verboseperiod   = 50000; //Report to Our every 5 secs
     int timetolog       = verboseperiod;
     uint cnt            = 0; //Current Timestep
@@ -246,21 +245,33 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 
     float gamma         = APOT*nPOT*tafPOT/(ADEP*nDEP*tafDEP); //This is Switch rule Plasticity Specific parameter- Not used here
 
-    cout << "---- Test MBON Triad KCs->DAN<->MBON Neuron  with Synapse Switch rule Gamma: " << gamma << endl;
-    cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
+    /// Synaptic Parameters  - No Plasticity - Just define Strentgh
+    //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
+    //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
+    synapseSW osynWa(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWb(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,20,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWd(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWz(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-10,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,50,true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-100.0,true); // fInSynapseStartStrength//This synapse is going to be copied into the ensemble
+
 
     ///Make Synapses of the Triad KC-DAN-MBON
     //Synapse Array // Holding on to pointers for Reporting Reasons
     synapseEnsemble<synapseSW,NoSynsWa> *arrKCsynsWa[iNoExSynapses+iNoInhSynapses];//KC->DAN Synapses
     synapseEnsemble<synapseSW,NoSynsWb> *arrKCsynsWb[iNoExSynapses+iNoInhSynapses];//KC->MBON Synapses
+    synapseEnsemble<synapseSW,NoSynsWz> *arrKCsynsWz[iNoExSynapses+iNoInhSynapses];//KC->MBON Synapses
     synapseEnsemble<synapseSW,NoSynsWg> *arrMBONsynsWg[1];//MBON->DAN Synapses
     synapseEnsemble<synapseSW,NoSynsWd> *arrMBONsynsWd[1];//DAN->MBON Synapses
 
 
-    //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
-    //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
-    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,fExSynapseStartStrength,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-50.0,true); //This synapse is going to be copied into the ensemble
+
+
+
+    cout << "---- Test MBON Triad KCs->DAN<->MBON Neuron  with Synapse Switch rule Gamma: " << gamma << endl;
+    cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
+
 
     //Instantiate Network Neurons -KCs, DAN MBON
     PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent
@@ -270,40 +281,51 @@ void testMBONTriad(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
     //DAN
     IFNeuron* pIfnDAN = new IFNeuron(h,2); //DAN ID ->2
 
+    // (R) Add Reward Input to DAN
+    PoissonNeuron* pPsR = new  PoissonNeuron(h,3,RinputFq,true);
+    synapseEnsemble<synapseSW,5>* osynR = new synapseEnsemble<synapseSW,5>(h,osynEx);
+    pPsR->RegisterEfferent((ISynapseEnsemble*)osynR); //Target Neuron is The DAN
+    pIfnDAN->RegisterAfferent((ISynapseEnsemble*)osynR); //Register as outgoing Synapse
+
+
     /// Make Synaptic Connections
-    // Generate KC poisson Neurons - Create and register Exhitatory Synapses to MBON and to DAN
+    // W betaGenerate KC poisson Neurons - Create and register Exhitatory Synapses to MBON and to DAN
     for (int i=0;i<iNoExSynapses;i++)
     {
-        //synapseEnsemble<synapseSW,NoSyns>* posynWb
-        arrKCsynsWb[i] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynEx); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
+        //W_beta synapseEnsemble<synapseSW,NoSyns>* posynWb
+        arrKCsynsWb[i] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynWb); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
         //Connect Synapse to Neuron - Let Neuron know that this synapses is connecting to it - This will also let the synapse know of the target neuron by calling posynen->RegisterNeuron(ifn);
         pIfnMBON->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Let the nEuron Know a bundle of synapses is connecting to it
 
-        //KC -> DAN Connections
-        arrKCsynsWa[i] = new synapseEnsemble<synapseSW,NoSynsWa>(h,osynEx);
+        //W_alpha KC -> DAN Connections
+        arrKCsynsWa[i] = new synapseEnsemble<synapseSW,NoSynsWa>(h,osynWa);
         pIfnDAN->RegisterAfferent((ISynapseEnsemble*)arrKCsynsWa[i]);
+
+        //W_zeta DAN -> KC Connections
+        arrKCsynsWz[i] = new synapseEnsemble<synapseSW,NoSynsWz>(h,osynWz);
+        pIfnDAN->RegisterEfferent((ISynapseEnsemble*)arrKCsynsWz[i]); //Connect DAN->KC
+
 
         //Create New Efferent / start IDs from 5+
         //PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
         pPsKC[i] = new PoissonNeuron(h,i+5,iTestFq,false);
         pPsKC[i]->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Tell this neuron it has a target
         pPsKC[i]->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWa[i])); //Tell this neuron it has a target
-
-
+        pPsKC[i]->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWz[i])); //Tell this neuron it has a target
     }
 
-    //Add Reward Input to DAN
-    PoissonNeuron* pPsR = new  PoissonNeuron(h,3,RinputFq,true);
-    synapseEnsemble<synapseSW,1>* osynR = new synapseEnsemble<synapseSW,1>(h,osynEx);
-    pPsR->RegisterEfferent((ISynapseEnsemble*)osynR); //Target Neuron is The DAN
-    pIfnDAN->RegisterAfferent((ISynapseEnsemble*)osynR); //Register as outgoing Synapse
-
-    //Add DAN ->MBON Synapse
-    arrMBONsynsWd[0] = new synapseEnsemble<synapseSW,NoSynsWd>(h,osynIn); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
+    // /W_delta Add DAN ->MBON Synapse
+    arrMBONsynsWd[0] = new synapseEnsemble<synapseSW,NoSynsWd>(h,osynWd); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
     pIfnDAN->RegisterEfferent((ISynapseEnsemble*)arrMBONsynsWd[0]); //Register as outgoing Synapse
     pIfnMBON->RegisterAfferent((ISynapseEnsemble*)(arrMBONsynsWd[0])); //Register as Incoming Synapse
 
-    /// Main Simulation Loop - Ends when Simulation time reached
+    // W_gamma - feedback MBON ->DAN
+    arrMBONsynsWg[0] = new synapseEnsemble<synapseSW,NoSynsWg>(h,osynWg); //inhibitory
+    pIfnDAN->RegisterAfferent((ISynapseEnsemble*)arrMBONsynsWg[0]); //Register as Incoming Synapse
+    pIfnMBON->RegisterEfferent((ISynapseEnsemble*)(arrMBONsynsWg[0])); //Register as Ougoing Synapse
+
+
+    /// Main Simulation Loop - Calls stepSimTime On each neuron - Ends when Simulation time reached
     while (cnt < uiSimulationTime)
     {
         timetolog--;

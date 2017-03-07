@@ -4,6 +4,7 @@
 ///
 ///
 /// \todo Separate Synapse Plasticity Models, between SONG and Switch rule - Making independent models
+/// \todo Change Array Handling to vector in Neuron and Synapse classes
 ///*
 
 

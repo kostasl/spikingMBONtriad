@@ -237,14 +237,21 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {
 
-    //Kenyon Cells /Input Pattern
+    const int iNaiveWeights[]     = {10,10,   0,   100, -10 , 50, -100};
+    const int iNaiveWeightssol2[] = {10,10,-100,   100, -10 , 50, -100};
+    const int iPairedWeights[]    = {10,0 ,   0,   100, -10 , 50, -100};
+    const int iUnpairedWeights[]  = {10,30,   0,  -100, -10 , 50, -100};
+
+    const int * iWeights = iNaiveWeights;
+
+        //Kenyon Cells /Input Pattern
     const int iTestFq           = 30;
 
     const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
     const float fKCOscAmplitude  = 20.0f;
     const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
 
-    const int RinputFq        = 20;
+    const int RinputFq        = 0;
     const int verboseperiod   = 50000; //Report to Our every 5 secs
 
     int timetolog       = verboseperiod;
@@ -258,13 +265,14 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
     /// Synaptic Parameters  - No Plasticity - Just define Strentgh
     //Define the synapse types and their parameters that would be used in the ensembles connecting the neurons
     //Params synapseSW(float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float Sreset,bool bNoPlasticity);
-    synapseSW osynWa(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWb(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-100,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWd(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,10,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynWz(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-10,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,50,true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,-100.0,true); // fInSynapseStartStrength//This synapse is going to be copied into the ensemble
+
+    synapseSW osynWa(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[0],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWb(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[1],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[2],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWd(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[3],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynWz(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[4],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[5],true); //This synapse is going to be copied into the ensemble
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[6],true); // fInSynapseStartStrength//This synapse is going to be copied into the ensemble
 
 
     ///Make Synapses of the Triad KC-DAN-MBON

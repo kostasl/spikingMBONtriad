@@ -65,14 +65,20 @@ static const float tafDEP	= 0.020f;
 static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
 
-static const string strPlotCmd = "gnuplot SpikeRaster.gplot";
+static const string strPlotCmd  = "gnuplot SpikeRaster.gplot";
+static const string strShowPlot = "evince NeuronRates.eps";
 
 int main(int argc, char *argv[])
 {
+    //Kenyon Cells /Input Pattern
+    const float fRewardInputFq   = 40.0f; ///Frequency of The R Input To The DAN
+    const float fKCOscPeriod     = 10.0f; //Period of KC input Neuron Oscillation
+    const float fKCOscAmplitude  = 20.0f;
+    const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+    const int   iInputCount      = 10;
 
 
-    ///Record Synapse Strengths
-
+    ///Record Synapse Strengths to file
     getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
     if (chdir(DATDIR)) {
             perror("chdir to " DATDIR);
@@ -101,8 +107,13 @@ int main(int argc, char *argv[])
     ofiles["KCLog"] = new std::ofstream(("KCLog.csv"),ios::out );
     (*ofiles["KCLog"]) << "#t\tVm\tSpikeRate"  << endl;
 
+
+
+
+    const uint uiSimulationTime = 100000;
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
-    testMBONTriadConfigA(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
+    testMBONTriadConfigA(iInputCount,fRewardInputFq,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+
 
    // Close all files
     for(Iterator it = ofiles.begin(); it != ofiles.end(); ++it) {
@@ -234,25 +245,19 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 /// There is no no plasticity activated.
 /// \note Adding a new neuron to the network requires its instantiation (either Poisson or IF), then a make a synapseensemble to connect the two.
 /// then call Registering Efferent at source neuron A and call RegisterEfferent on target neuron B
-void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
+void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaselineFq,float fKCOscAmplitude,float fKCOscPeriod, uint uiSimulationTime)
 {
 
-    const int iNaiveWeights[]     = {10,10,   0,   100, -10 , 50, -100};
-    const int iNaiveWeightssol2[] = {10,10,-100,   100, -10 , 50, -100};
-    const int iPairedWeights[]    = {10,0 ,   0,   100, -10 , 50, -100};
-    const int iUnpairedWeights[]  = {10,30,   0,  -100, -10 , 50, -100};
 
-    const int * iWeights = iNaiveWeights;
 
-        //Kenyon Cells /Input Pattern
-    const int iTestFq           = 30;
+    const int iNaiveWeights[]     = {100,100,   0,   100, -100 , 20, -100};
+    const int iNaiveWeightssol2[] = {100,100,-100,   100, -100 , 20, -100};
+    const int iPairedWeights[]    = {100,0 ,   0,   100, -100 , 20, -100};
+    const int iUnpairedWeights[]  = {10,30,   0,  -100, -10 , 20, -100};
 
-    const float fKCOscPeriod     = 150.0f; //Period of KC input Neuron Oscillation
-    const float fKCOscAmplitude  = 20.0f;
-    const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+    const int * iWeights = iPairedWeights;
 
-    const int RinputFq        = 0;
-    const int verboseperiod   = 50000; //Report to Our every 5 secs
+    const int verboseperiod   = 10000; //Report to Our every 5 secs
 
     int timetolog       = verboseperiod;
     uint cnt            = 0; //Current Timestep
@@ -291,46 +296,57 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
     cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
 
 
-    //Instantiate Network Neurons -KCs, DAN MBON
-    PoissonNeuron *pPsKC[iNoExSynapses+iNoInhSynapses];//Create Separate Poisson Sources for each KC afferent
+    //Instantiate Network Neurons -Inputs to KC, KC, DAN MBON
+    PoissonNeuron* pPsOSN[iInputCount];//Create Separate Poisson Sources for each KC afferent
 
     //Create IFNeuron for MBON
-    IFNeuron* pIfnMBON = new IFNeuron(h,1); //MBON ID -> 1
-    //DAN
-    IFNeuron* pIfnDAN = new IFNeuron(h,2); //DAN ID ->2
+    IFNeuron* pIfnMBON  = new IFNeuron(h,4); //MBON ID -> 1
+
+    //Create IFNeuron for DAN
+    IFNeuron* pIfnDAN  = new IFNeuron(h,3); //DAN ID -> 1
+    //KC
+    IFNeuron* pIfnKC   = new IFNeuron(h,2); //KC ID ->2
 
     // (R) Add Reward Input to DAN
-    PoissonNeuron* pPsR = new  PoissonNeuron(h,3,RinputFq,true);
-    synapseEnsemble<synapseSW,5>* osynR = new synapseEnsemble<synapseSW,5>(h,osynEx);
+    PoissonNeuron* pPsR = new  PoissonNeuron(h,1,fRewardInputFq,true);
+    synapseEnsemble<synapseSW,1>* osynR = new synapseEnsemble<synapseSW,1>(h,osynEx);
     pPsR->RegisterEfferent((ISynapseEnsemble*)osynR); //Target Neuron is The DAN
     pIfnDAN->RegisterAfferent((ISynapseEnsemble*)osynR); //Register as outgoing Synapse
 
 
-    /// Make Synaptic Connections
-    // W betaGenerate KC poisson Neurons - Create and register Exhitatory Synapses to MBON and to DAN
-    for (int i=0;i<iNoExSynapses;i++)
+    // (R) Add Sensory Input to KC
+
+    for (int i=0;i<iInputCount;i++)
     {
-        //W_beta synapseEnsemble<synapseSW,NoSyns>* posynWb
-        arrKCsynsWb[i] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynWb); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
-        //Connect Synapse to Neuron - Let Neuron know that this synapses is connecting to it - This will also let the synapse know of the target neuron by calling posynen->RegisterNeuron(ifn);
-        pIfnMBON->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Let the nEuron Know a bundle of synapses is connecting to it
+        pPsOSN[i] = new  PoissonNeuron(h,6+i,fKCBaselineFq,true);
+        synapseEnsemble<synapseSW,1>* osynOSN = new synapseEnsemble<synapseSW,1>(h,osynEx);
+        pPsOSN[i]->RegisterEfferent((ISynapseEnsemble*)osynOSN); //Target Neuron is The DAN
+        pIfnKC->RegisterAfferent((ISynapseEnsemble*)osynOSN); //Register as outgoing Synapse
 
-        //W_alpha KC -> DAN Connections
-        arrKCsynsWa[i] = new synapseEnsemble<synapseSW,NoSynsWa>(h,osynWa);
-        pIfnDAN->RegisterAfferent((ISynapseEnsemble*)arrKCsynsWa[i]);
-
-        //W_zeta DAN -> KC Connections
-        arrKCsynsWz[i] = new synapseEnsemble<synapseSW,NoSynsWz>(h,osynWz);
-        pIfnDAN->RegisterEfferent((ISynapseEnsemble*)arrKCsynsWz[i]); //Connect DAN->KC
-
-
-        //Create New Efferent / start IDs from 5+
-        //PoissonNeuron(float timestep,short ID=0,int StartFireRate=0,bool FixedRate=false);
-        pPsKC[i] = new PoissonNeuron(h,i+5,iTestFq,false);
-        pPsKC[i]->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWb[i])); //Tell this neuron it has a target
-        pPsKC[i]->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWa[i])); //Tell this neuron it has a target
-        pPsKC[i]->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWz[i])); //Tell this neuron it has a target
     }
+
+
+
+    /// Make Synaptic Connections To KC
+    //W_beta synapseEnsemble<synapseSW,NoSyns>* posynWb
+    arrKCsynsWb[0] = new synapseEnsemble<synapseSW,NoSynsWb>(h,osynWb); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
+    //Connect Synapse to Neuron - Let Neuron know that this synapses is connecting to it - This will also let the synapse know of the target neuron by calling posynen->RegisterNeuron(ifn);
+    pIfnMBON->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWb[0])); //Let the nEuron Know a bundle of synapses is connecting to it
+
+    //W_alpha KC -> DAN Connections
+    arrKCsynsWa[0] = new synapseEnsemble<synapseSW,NoSynsWa>(h,osynWa);
+    pIfnDAN->RegisterAfferent((ISynapseEnsemble*)arrKCsynsWa[0]);
+
+    //W_zeta DAN -> KC Connections
+    arrKCsynsWz[0] = new synapseEnsemble<synapseSW,NoSynsWz>(h,osynWz);
+    pIfnDAN->RegisterEfferent((ISynapseEnsemble*)arrKCsynsWz[0]); //Connect DAN->KC
+
+
+    //Connect to KC
+    pIfnKC->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWb[0])); //Tell this neuron it has a target
+    pIfnKC->RegisterEfferent((ISynapseEnsemble*)( arrKCsynsWa[0])); //Tell this neuron it has a target
+    pIfnKC->RegisterAfferent((ISynapseEnsemble*)( arrKCsynsWz[0])); //Tell this neuron it has a target
+
 
     // /W_delta Add DAN ->MBON Synapse
     arrMBONsynsWd[0] = new synapseEnsemble<synapseSW,NoSynsWd>(h,osynWd); //new synapseEnsemble<synapseSW,1>(h,osyn); //No Plasticity
@@ -350,14 +366,14 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
         t+=h;
         cnt++;
         //Run Through each afferent and Poisson Source
-        for (int i=0;i<iNoExSynapses+iNoInhSynapses;i++)
+        for (int i=0;i<iInputCount;i++)
         {
-            pPsKC[i]->setFireRate( fKCBaselineFq + fKCOscAmplitude*sin(2*M_PI*t/fKCOscPeriod));
-            pPsKC[i]->StepSimTime();
+            pPsOSN[i]->setFireRate( fKCBaselineFq + fKCOscAmplitude*sin(2*M_PI*t/fKCOscPeriod));
+            pPsOSN[i]->StepSimTime();
 
-            if (pPsKC[i]->ActionPotentialOccured())
+            if (pPsOSN[i]->ActionPotentialOccured())
             {
-                (*ofiles["SpikeRasterLog"])  << pPsKC[i]->getID() << "\t" << t << endl;
+                (*ofiles["SpikeRasterLog"])  << pPsOSN[i]->getID() << "\t" << t << endl;
                 spikecnt++;
             }
 
@@ -365,16 +381,19 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
             //Log Strength of Every Exhitatory Synapse
             //if (timetolog==0 && i < iNoExSynapses) synstest[i]->logtofile(ofile);
         }
+
         pPsR->StepSimTime();
+        pIfnKC->StepSimTime();
         pIfnMBON->StepSimTime();
         pIfnDAN->StepSimTime();
+
 
 
         ///Log - Report Output
         //Log New Membrane Voltages
         (*ofiles["MBONLog"]) << t <<"\t" << pIfnMBON->getMembraneVoltage() << "\t" << pIfnMBON->getFireRate()  << endl;
         (*ofiles["DANLog"]) << t <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate()  << endl;
-        (*ofiles["KCLog"]) << t <<"\t 0 \t" << pPsKC[0]->getFireRate()  << endl;
+        (*ofiles["KCLog"]) << t <<"\t"<< pIfnKC->getMembraneVoltage() <<  "\t" << pIfnKC->getFireRate()  << endl;
 
         //Log Spikes
         if (pIfnMBON->ActionPotentialOccured())
@@ -383,9 +402,10 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
             (*ofiles["SpikeRasterLog"])  << pIfnMBON->getID() << "\t" << t << endl;
         }
         if (pIfnDAN->ActionPotentialOccured())
-        {
             (*ofiles["SpikeRasterLog"])  << pIfnDAN->getID() << "\t" << t << endl;
-        }
+
+        if (pIfnKC->ActionPotentialOccured())
+            (*ofiles["SpikeRasterLog"])  << pIfnKC->getID() << "\t" << t << endl;
 
 
         //Periodic Reporting to Std IO
@@ -408,15 +428,18 @@ void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulation
     int iret = system(strPlotCmd.c_str());
     cout << endl << "Gnuplot Returned :" << iret << endl;
 
+    iret = system(strShowPlot.c_str());
+    cout << endl << "Show (evince) Returned :" << iret << endl;
 
     //Free up memory
     delete pIfnMBON;
     delete pIfnDAN;
+    delete pIfnKC;
     delete pPsR;
 
     //Close Synapse Log File
 
-    for (int i=0;i<(iNoExSynapses+iNoInhSynapses);i++)
-        delete  pPsKC[i];
+    for (int i=0;i<(iInputCount);i++)
+        delete  pPsOSN[i];
 
 } // END Function IFNeuron

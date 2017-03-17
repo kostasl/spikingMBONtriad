@@ -17,6 +17,20 @@ ISynapseEnsemble::ISynapseEnsemble()
 
 }
 
+/// \brief Pointer to Source Neuron of this synaptic connection
+/// \returns pointer to Afferent Neuron of this synapse
+ INeuron* ISynapseEnsemble::getSourceNeuron(){
+
+    return mpSourceNeuron;
+}
+
+/// \brief Pointer to Targer Neuron of this synaptic connection
+/// \returns pointer to Efferent Neuron of this synapse
+ INeuron* ISynapseEnsemble::getTargetNeuron()
+{
+
+    return mpTargetNeuron;
+}
 
 
 /// \brief Register a pointer to the Target neuron receiving the impulses - When a Neuron registers this SynapseEnsemble it will register also pass a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival

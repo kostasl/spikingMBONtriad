@@ -19,18 +19,33 @@ is object is only used to obtain the synaptic strength at the time of transmissi
 #include "stdafx.h"
 #include "math.h"
 #include "synapticTransmission.h"
+#include "isynapseensemble.h"
 
 
-synapticTransmission::synapticTransmission(float timestep,double SynapseStrength)
+synapticTransmission::synapticTransmission(double SynapseStrength)
 {
 	mbTransmitted = false;
-	mfSimTimestep = timestep;
+    mfSimTimestep = TIMESTEP;
 	mdtime= 0; //Start at time 0 and increment by timestep
 	mbTransmitted = false;
 	tafm = 0.020f;
 	tafs = 0.005f;
 	//tau = tafm/(tafm-tafs);
 	mfSynapticStrength = SynapseStrength;
+}
+
+/// \brief Use this constructor passing the information on which Synapse is propagating the spike
+synapticTransmission::synapticTransmission(ISynapseEnsemble* pSourceSynapse)
+{
+    mbTransmitted = false;
+    mfSimTimestep = TIMESTEP;
+    mdtime= 0; //Start at time 0 and increment by timestep
+    mbTransmitted = false;
+    tafm = 0.020f;
+    tafs = 0.005f;
+    //tau = tafm/(tafm-tafs);
+    mfSynapticStrength = pSourceSynapse->getAvgStrength();
+    mpSourceSynapse     = pSourceSynapse;
 }
 
 //Returns the value of the current injection*Synaptic Strength

@@ -46,7 +46,7 @@
 
 /// \section Function Prototypes
 void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime);
-void testMBONTriadConfigA(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime);
+void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaselineFq,float fKCOscAmplitude,float fKCOscPeriod, uint uiSimulationTime);
 
 
 #endif

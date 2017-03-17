@@ -29,17 +29,14 @@ public:
     virtual double getAvgStrength();
     //virtual unsigned short getSourceFireRate();
     virtual void Reset(void);
-	//When a Neuron registers this SynapseEnsemble it will register also pass
-	// a pointer to its self so the SynapseEnsemble can notify the neuron of a spike arrival
-    virtual short getsourceID();
-    virtual short gettargetID();
-	void logtofile(std::ofstream &fs);//Passed an open filestream it will log the synapse strength
+
+    void logtofile(std::ofstream &fs);//Passed an open filestream it will log the synapse strength
     virtual ~synapseEnsemble(void); //Virtual Destructor Called from Base Class
 
 
 private:
-    void RegisterAfferentNeuron(INeuron* pNeuron); //Save pointer to Target Neuron
-    void RegisterEfferentNeuron(INeuron* pNeuron); //Save pointer to Source Neuron
+    //void RegisterAfferentNeuron(INeuron* pNeuron); //Save pointer to Target Neuron
+    //void RegisterEfferentNeuron(INeuron* pNeuron); //Save pointer to Source Neuron
 
 	short mID; //An ID externaly created to identify the synapse in a population synapsing on the same Neuron
 	double mfSimTimestep;//The simulation time step in seconds

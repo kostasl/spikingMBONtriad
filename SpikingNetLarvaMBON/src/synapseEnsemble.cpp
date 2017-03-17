@@ -67,7 +67,7 @@ template<class T,int N> float synapseEnsemble<T,N>::SpikeArrived(ISynapse::SPIKE
        //Propagate Spike to Neuron if Target exists
        if (mpTargetNeuron && type == ISynapse::SPIKE_SITE::SPIKE_PRE)
        {
-           synapticTransmission* sp = new synapticTransmission((float)mfSimTimestep,mfAvgStrength);
+           synapticTransmission* sp = new synapticTransmission(this);
            //Debug
            //if (mfAvgStrength < 0.0)
 //           {
@@ -124,17 +124,6 @@ int  synapseEnsemble<T,N>::getSynapsesCount()
 	return miSynapsesCount;
 }
 
-
-template<class T,int N>
-short synapseEnsemble<T,N>::getsourceID()
-{
-	return msourceID;
-}
-template<class T,int N>
-short synapseEnsemble<T,N>::gettargetID()
-{
-	return mtargetID;
-}
 //Logs Synapse State to open File stream
 template<class T,int N>
 void synapseEnsemble<T,N>::logtofile(std::ofstream &fs)

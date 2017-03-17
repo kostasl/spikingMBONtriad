@@ -349,12 +349,14 @@ double IFNeuron::StepRK_UpdateVm(void)
 	if (Vm>Vthres) 
 	{
         uiNumberOfSpikesInPeriod++;
+        fMeanFireRate = (1.0) + (1.0 - h) * fMeanFireRate;
         //Vm=Vreset;
         Vm =Vspike;
 		ActionPotentialEvent(); //Send Post Syn Spike event back to Synapses
-	
+
         //return Vthres;
-	}
+    }else
+        fMeanFireRate = (0.0) + (1.0 - h) * fMeanFireRate;
 	
 
 	return Vm;
@@ -405,7 +407,7 @@ float IFNeuron::getFireRate()
     //msNumberOfSpikesInPeriod=0; //Reset Counter
     //mfPeriodOfSpikeCount = 0.0;
     //double alpha = 1.0/IFFIRERATE_PERIOD;
-    fMeanFireRate = (h*uiNumberOfSpikesInPeriod) + (1.0 - h) * fMeanFireRate;
+    //fMeanFireRate = (h*uiNumberOfSpikesInPeriod) + (1.0 - h) * fMeanFireRate;
 
 
     return fMeanFireRate;

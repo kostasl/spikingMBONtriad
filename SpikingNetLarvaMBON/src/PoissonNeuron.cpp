@@ -44,25 +44,31 @@ PoissonNeuron::PoissonNeuron(float timestep,short ID,int StartFireRate,bool Fixe
 //adds Afferent to array and registers target neuron with it
 //Same As IFNeuron
 /// \name RegisterAfferent
-/// \brief It connects to an afferent (target) neuron via the ensemble Synapse
-/// \param A synapse Ensemble/set connecing the Afferent neuron to this neuron
+/// /// \brief Registers an incoming pathway (afferent) synapse that provides impulses to this neuron
+/// notifies the synapse ensemble that this neuron is its target
+
 void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 {
-	//Check that the array is not Maxed.
-    if (iLastEfferentSynapseIndex == (MAX_AFFERENTS-1))
-	{
-		std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
-		abort();
-		throw "Max afferent number reached, Increase MAX_AFFERENTS ";
-        /// \todo Can have code to increase array size with malloc() or convert to std vector
+    //Check that the array is not Maxed.
+    if (iLastAfferentSynapseIndex == (MAX_AFFERENTS-1))
+    {
+        std::cout << "Max afferent number reached, Increase MAX_AFFERENTS ";
+        abort();
+        throw "Max afferent number reached, Increase MAX_AFFERENTS ";
+        //Can have code to increase array size with malloc()
+    }
 
-	}
-
-	//Register Back to the Synapse Ensemble
+    if (!pSyn)
+    {
+        std::cerr << "missing synapse ensemble pointer!" << std::endl;
+        abort();
+    }
+    //Register Back to the Synapse Ensemble
     pSyn->RegisterAfferentNeuron(this);
-	//Add to private array
-    mAfferents[iLastEfferentSynapseIndex] = pSyn;
-    iLastEfferentSynapseIndex++;
+    //Add to private array
+    mAfferents[iLastAfferentSynapseIndex] = pSyn;
+    iLastAfferentSynapseIndex++;
+
 
 }
 
@@ -75,7 +81,7 @@ void PoissonNeuron::RegisterAfferent(ISynapseEnsemble* pSyn)
 void PoissonNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
 {
     //Check that the array is not Maxed.
-    if (iLastAfferentSynapseIndex == (MAX_AFFERENTS-1))
+    if (iLastEfferentSynapseIndex == (MAX_AFFERENTS-1))
     {
         std::cout << "Max efferent number reached, Increase MAX_AFFERENTS ";
         abort();
@@ -85,10 +91,11 @@ void PoissonNeuron::RegisterEfferent(ISynapseEnsemble* pSyn)
     }
 
     //Register Back to the Synapse Ensemble
-    pSyn->RegisterEfferentNeuron(this);
+    pSyn->RegisterEfferentNeuron(this); //The Receiving Neuron
     //Add to private array
-    mEfferents[iLastAfferentSynapseIndex] = pSyn;
-    iLastAfferentSynapseIndex++;
+    mEfferents[iLastEfferentSynapseIndex] = pSyn;
+    iLastEfferentSynapseIndex++;
+
 
 }
 
@@ -100,9 +107,15 @@ void PoissonNeuron::SpikeArrived(synapticTransmission* s)
 	delete s; 
 }
 
-//Called on every Simulation step
+/// \name StepSimTime
+/// \brief Called on every Simulation step. The Poisson Baseline Spike rate lamda is modified by afferent input as AfferentMeanFireRate*SynapticWeight
+///
+///
 void PoissonNeuron::StepSimTime()
 {
+    //Start with the Set BaseLine Rate / then Modify by inputs
+    double deffectiveRate = mlamda;
+
     float noise         =   0.0; // PoissonSource::randGauss(0,4.0f*sigma,sigma,2.0f*sigma);
     bPostspiketoLog     =   false;
 	//poisson spike draw
@@ -110,25 +123,25 @@ void PoissonNeuron::StepSimTime()
     double r            = gsl_rng_uniform(rng_r);
     //if ((msLastFireRate*h) > r)
 
-    if ((mlamda*h + noise)> r)
+    //Sum Afferent rates*SynapticWeight
+    for (int i=0; i< iLastAfferentSynapseIndex;i++)
+        deffectiveRate += mAfferents[i]->getSourceNeuron()->getFireRate()*mAfferents[i]->getAvgStrength();
+
+    if ((deffectiveRate*h + noise)> r)
     {
          ActionPotentialEvent();
          uiNumberOfSpikesInPeriod++;
-    }
+
+         fMeanFireRate = (1.0) + (1.0 - h) * fMeanFireRate; //Accumulate Spike in Rolling average
+    }else
+        fMeanFireRate = (0.0) + (1.0 - h) * fMeanFireRate; //No Spike
 
 
     //COunt POst Rate Timer
-     uiPeriodOfSpikeCount++;
+    // uiPeriodOfSpikeCount++;
 
      //Mean Period Elapsed? Reset Period
 
-      //Exponential Decay Of Running Average //Bin # Spike
-      if (uiPeriodOfSpikeCount > IFFIRERATE_PERIOD)
-      {
-         uiPeriodOfSpikeCount = 0;
-         uiNumberOfSpikesInPeriod = 0;
-
-     }
 
 }
 
@@ -180,10 +193,6 @@ void PoissonNeuron::setFireRate(float newFireRate)
 /// \brief Returns approximate mean fire rate count using the number of Spikes In the previous Elapsed second
 float PoissonNeuron::getFireRate()
 {
-
-
-    //double alpha = 1.0/IFFIRERATE_PERIOD;
-    fMeanFireRate = (h*uiNumberOfSpikesInPeriod) + (1.0 - h) * fMeanFireRate;
 
 
     return fMeanFireRate;

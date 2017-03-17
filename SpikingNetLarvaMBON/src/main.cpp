@@ -71,17 +71,58 @@ static const string strShowPlot = "evince NeuronRates.eps";
 int main(int argc, char *argv[])
 {
     //Kenyon Cells /Input Pattern
-    const float fRewardInputFq   = 40.0f; ///Frequency of The R Input To The DAN
-    const float fKCOscPeriod     = 10.0f; //Period of KC input Neuron Oscillation
-    const float fKCOscAmplitude  = 20.0f;
-    const float fKCBaselineFq    = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
-    const int   iInputCount      = 10;
+    float fRewardInputFq        = 40.0f; //Frequency of The R Input To The DAN
+    float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
+    float fKCOscAmplitude       = 20.0f; //INput to KC - Amplitude of slow input Oscillation
+    float fKCBaselineFq         = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
+    const int iInputCount       = 10;
+
+    int opt;
+    //Process command line options
+    while ((opt = getopt(argc, argv, "R:P:A:B:qmljsdebugger=port:43543,block")) != -1) {
+            switch (opt) {
+            case 'R':
+                cout << " R: " << optarg <<  endl <<  endl;
+                fRewardInputFq =  atof(optarg);
+                break;
+            case 'P':
+                fKCOscPeriod = atof(optarg);
+                break;
+            case 'A':
+                fKCOscAmplitude = atof(optarg);
+                break;
+            case 'B':
+                fKCBaselineFq = atof(optarg);
+                break;
+            case 'q':
+                cout << " DEBUG MODE " << endl;
+                break;
+            case '?':
+                fprintf(stderr, "\n\n Usage: %s [-R FqReward] [-P KC Input OscPeriod] [-A Amplitude Of Slow Input Osc.] [-B Input Baseline Fq]\n", argv[0]);
+                exit(EXIT_SUCCESS);
+            default: /* '?' */
+                cout << "Uknown option '" << opt << "'" << endl;
+
+            }
+        }
+
+       printf("Reward Input Strength (Hz) [R]=%0.2f;\nKC Input slow Osc. Period [P]=%0.2f;\nAmplitude of KC Slow Input-Oscillation [A]=%0.2f;\nBaseline on of KC input (Hz) [B]=%0.2f\n", fRewardInputFq, fKCOscPeriod, fKCOscAmplitude,fKCBaselineFq);
+
+       if (optind > argc) {
+           cout << argc << "<= " << optind << endl;
+           fprintf(stderr, "Expected argument after options\n");
+           exit(EXIT_FAILURE);
+        }
+
+       printf("name argument = %s\n", argv[optind]);
+
 
 
     ///Record Synapse Strengths to file
     getcwd(FilePath, _MAX_PATH); // reads the current working directory into the array FilePath
     if (chdir(DATDIR)) {
             perror("chdir to " DATDIR);
+            exit(EXIT_FAILURE);
         }
 
     string sfilename(FilePath);
@@ -121,7 +162,7 @@ int main(int argc, char *argv[])
       it->second = 0;
     }
 
-   return 1;
+   exit(EXIT_SUCCESS);
 }
 
 
@@ -248,8 +289,6 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaselineFq,float fKCOscAmplitude,float fKCOscPeriod, uint uiSimulationTime)
 {
 
-
-
     const int iNaiveWeights[]     = {100,100,   0,   100, -100 , 20, -100};
     const int iNaiveWeightssol2[] = {100,100,-100,   100, -100 , 20, -100};
     const int iPairedWeights[]    = {100,0 ,   0,   100, -100 , 20, -100};
@@ -368,7 +407,7 @@ void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaseline
         //Run Through each afferent and Poisson Source
         for (int i=0;i<iInputCount;i++)
         {
-            pPsOSN[i]->setFireRate( fKCBaselineFq + fKCOscAmplitude*sin(2*M_PI*t/fKCOscPeriod));
+            pPsOSN[i]->setFireRate( fKCBaselineFq + fKCOscAmplitude*sin(2.0*M_PI*t/fKCOscPeriod));
             pPsOSN[i]->StepSimTime();
 
             if (pPsOSN[i]->ActionPotentialOccured())

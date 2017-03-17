@@ -18,7 +18,7 @@
 
 //Constructor Not used
 template<class T,int N>
-synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short sourceID,short ID):ISynapseEnsemble()
+synapseEnsemble<T,N>::synapseEnsemble(float simTimeStep,short ID):ISynapseEnsemble()
 {
     mID                     = ID;
     mbNoPlasticity          = true; //Switch Off Plasticity By Default

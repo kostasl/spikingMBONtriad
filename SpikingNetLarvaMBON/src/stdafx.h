@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // for srand ( ) and rand ( ) 
+#include <unistd.h> //for getopt
 #include <cstring>
 #include <linux/limits.h> //For Constants Like PATH_MAX
 #include <unistd.h> //for getcwd

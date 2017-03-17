@@ -15,7 +15,7 @@ template <class T, int N>
 class synapseEnsemble:public ISynapseEnsemble {
 
 public:
-    synapseEnsemble(float simTimeStep=0.0001f,short sourceID=0,short ID=0);
+    synapseEnsemble(float simTimeStep=0.0001f,short ID=0);
     //synapseEnsemble(float simTimeStep,int SynapsesNumber,float A1,float A2,float tafPOT,float tafDEP,int nPOT,int nDEP,float StartStrength,short sourceID=0,short ID=0,bool bNoPlasticity=true,unsigned short SourceFireRate=0);
     synapseEnsemble(float simTimeStep,ISynapse& osynapse); //This uses the synapse Instance To create copies which are held in the ensemble
 	//Function called by afferent and by target neuron when a post synaptic spike occurs

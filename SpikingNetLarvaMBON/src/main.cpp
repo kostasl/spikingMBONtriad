@@ -71,15 +71,18 @@ static const string strShowPlot = "evince NeuronRates.eps";
 int main(int argc, char *argv[])
 {
     //Kenyon Cells /Input Pattern
-    float fRewardInputFq        = 40.0f; //Frequency of The R Input To The DAN
+    float fRewardInputFq        = 10.0f; //Frequency of The R Input To The DAN
     float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
     float fKCOscAmplitude       = 20.0f; //INput to KC - Amplitude of slow input Oscillation
     float fKCBaselineFq         = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
     const int iInputCount       = 10;
 
+    bool bflagPlot = true; //Produce Output plot
+    bool bflagShow = true; //Show / display output file via doc. viewer
+
     int opt;
-    //Process command line options
-    while ((opt = getopt(argc, argv, "R:P:A:B:qmljsdebugger=port:43543,block")) != -1) {
+    //Process command line options //qmljsdebugger=port:43543,block"
+    while ((opt = getopt(argc, argv, "R:P:A:B:p:s:qmljsdebugger=port:43543,block")) != -1) {
             switch (opt) {
             case 'R':
                 cout << " R: " << optarg <<  endl <<  endl;
@@ -96,6 +99,12 @@ int main(int argc, char *argv[])
                 break;
             case 'q':
                 cout << " DEBUG MODE " << endl;
+                break;
+            case 'p':
+                bflagPlot = optarg;
+                break;
+            case 's':
+                bflagShow = optarg;
                 break;
             case '?':
                 fprintf(stderr, "\n\n Usage: %s [-R FqReward] [-P KC Input OscPeriod] [-A Amplitude Of Slow Input Osc.] [-B Input Baseline Fq]\n", argv[0]);
@@ -154,6 +163,21 @@ int main(int argc, char *argv[])
     const uint uiSimulationTime = 100000;
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
     testMBONTriadConfigA(iInputCount,fRewardInputFq,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+
+
+    //Plot Output
+    int iret;
+    if (bflagPlot)
+    {
+        iret = system(strPlotCmd.c_str());
+        cout << endl << "Gnuplot Returned :" << iret << endl;
+        if (bflagShow)
+        {
+            iret = system(strShowPlot.c_str());
+            cout << endl << "Show (evince) Returned :" << iret << endl;
+
+        }
+    }
 
 
    // Close all files
@@ -463,12 +487,7 @@ void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaseline
 
 
 
-    //Plot Output
-    int iret = system(strPlotCmd.c_str());
-    cout << endl << "Gnuplot Returned :" << iret << endl;
 
-    iret = system(strShowPlot.c_str());
-    cout << endl << "Show (evince) Returned :" << iret << endl;
 
     //Free up memory
     delete pIfnMBON;

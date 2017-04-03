@@ -70,6 +70,14 @@ static const string strShowPlot = "evince NeuronRates.eps";
 
 int main(int argc, char *argv[])
 {
+
+    //Network Configs           Wa , Wb, Wg, Wdelta, Wzeta,Wex, Winh
+    int iNaiveWeights[]     = {100, 100,   0,   100, -100 , 20, -100};
+    int iNaiveWeightssol2[] = {100, 100,-100,   100, -100 , 20, -100};
+    int iPairedWeights[]    = {100, 0 ,   0,    100, -100 , 20, -100};
+    int iUnpairedWeights[]  = {10,  30,   0,   -100, -10  , 20, -100};
+
+
     //Kenyon Cells /Input Pattern
     float fRewardInputFq        = 10.0f; //Frequency of The R Input To The DAN
     float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
@@ -150,19 +158,18 @@ int main(int argc, char *argv[])
 
     ///DAN Neuron Membrane Voltage
     ofiles["DANLog"] = new std::ofstream(("DANLog.csv"),ios::out );
-    (*ofiles["DANLog"]) << "#t\tVm\tSpikeRate"  << endl;
-
+    (*ofiles["DANLog"]) << "#t\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
 
     ///KC Neuron Membrane Voltage
     ofiles["KCLog"] = new std::ofstream(("KCLog.csv"),ios::out );
-    (*ofiles["KCLog"]) << "#t\tVm\tSpikeRate"  << endl;
+    (*ofiles["KCLog"]) << "#t\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
 
 
 
 
     const uint uiSimulationTime = 100000;
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
-    testMBONTriadConfigA(iInputCount,fRewardInputFq,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+    testMBONTriadConfigA(iInputCount,iNaiveWeights,fRewardInputFq,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
 
 
     //Plot Output
@@ -310,15 +317,12 @@ void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 /// There is no no plasticity activated.
 /// \note Adding a new neuron to the network requires its instantiation (either Poisson or IF), then a make a synapseensemble to connect the two.
 /// then call Registering Efferent at source neuron A and call RegisterEfferent on target neuron B
-void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaselineFq,float fKCOscAmplitude,float fKCOscPeriod, uint uiSimulationTime)
+void testMBONTriadConfigA(int iInputCount,int * iWeights,float fRewardInputFq,float fKCBaselineFq,float fKCOscAmplitude,float fKCOscPeriod, uint uiSimulationTime)
 {
 
-    const int iNaiveWeights[]     = {100,100,   0,   100, -100 , 20, -100};
-    const int iNaiveWeightssol2[] = {100,100,-100,   100, -100 , 20, -100};
-    const int iPairedWeights[]    = {100,0 ,   0,   100, -100 , 20, -100};
-    const int iUnpairedWeights[]  = {10,30,   0,  -100, -10 , 20, -100};
 
-    const int * iWeights = iPairedWeights;
+
+    //iWeights
 
     const int verboseperiod   = 10000; //Report to Our every 5 secs
 
@@ -339,8 +343,8 @@ void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaseline
     synapseSW osynWg(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[2],true); //This synapse is going to be copied into the ensemble
     synapseSW osynWd(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[3],true); //This synapse is going to be copied into the ensemble
     synapseSW osynWz(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[4],true); //This synapse is going to be copied into the ensemble
-    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[5],true); //This synapse is going to be copied into the ensemble
-    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[6],true); // fInSynapseStartStrength//This synapse is going to be copied into the ensemble
+    synapseSW osynEx(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[5],true); //A general exhitatory Synapse - Used here between R->DAN, & OSNs->KC
+    synapseSW osynIn(APOT,ADEP,tafPOT,tafDEP,nPOT,nDEP,iWeights[6],true); // fInSynapseStartStrength ///A general inhibitory Synapse - Used here
 
 
     ///Make Synapses of the Triad KC-DAN-MBON
@@ -455,8 +459,8 @@ void testMBONTriadConfigA(int iInputCount,float fRewardInputFq,float fKCBaseline
         ///Log - Report Output
         //Log New Membrane Voltages
         (*ofiles["MBONLog"]) << t <<"\t" << pIfnMBON->getMembraneVoltage() << "\t" << pIfnMBON->getFireRate()  << endl;
-        (*ofiles["DANLog"]) << t <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate()  << endl;
-        (*ofiles["KCLog"]) << t <<"\t"<< pIfnKC->getMembraneVoltage() <<  "\t" << pIfnKC->getFireRate()  << endl;
+        (*ofiles["DANLog"]) << t <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate() << "\t" <<  pPsR->getFireRate()  << endl;
+        (*ofiles["KCLog"]) << t <<"\t"<< pIfnKC->getMembraneVoltage() <<  "\t" << pIfnKC->getFireRate()  << "\t" <<  pPsOSN[0]->getFireRate() << endl;
 
         //Log Spikes
         if (pIfnMBON->ActionPotentialOccured())

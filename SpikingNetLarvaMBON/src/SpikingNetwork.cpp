@@ -45,8 +45,8 @@ int IzhikevichNeuron_main() {
 	float* I =  new float[inetSize];//This timestep Injection current input -
 	float* F =  new float[inetSize];//Next timestep Injection current input -
 
-	memset(I,0,inetSize);
-	memset(F,0,inetSize);
+    memset(I,0,inetSize*sizeof(float));
+    memset(F,0,inetSize*sizeof(float));
 
 	float** W = new float*[inetSize]; // Vector of pointers to vectors - unitialized Weight Matrix
 	float fVm; //Temp Var. Holding Membrane Voltage

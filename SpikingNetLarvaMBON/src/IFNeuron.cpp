@@ -23,6 +23,7 @@ IFNeuron::IFNeuron(double timestep,short ID)
 {
 	mID					= ID;
     iLastEfferentSynapseIndex	= 0;
+    iLastAfferentSynapseIndex	= 0;
     iLastSpikeIndex		= 0.0;
     Eex					= 0.0; //mV //Excitatory Reversal Potential
     Ein					= -0.070;//mV //inhibitory Reversal Potential
@@ -50,6 +51,10 @@ IFNeuron::IFNeuron(double timestep,short ID)
     uiNumberOfSpikesInPeriod = 0;
     uiPeriodOfSpikeCount	= 0.0f;
     fMeanFireRate			= 0.0f;
+
+
+    memset(mAfferents,0,sizeof(ISynapseEnsemble*)*(MAX_AFFERENTS));
+    memset(mEfferents,0,sizeof(ISynapseEnsemble*)*(MAX_AFFERENTS));
 
 #ifdef DEBUG_LOG
 	char *File = new char[50];

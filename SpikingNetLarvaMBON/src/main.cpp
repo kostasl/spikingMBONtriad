@@ -70,7 +70,7 @@ static const string strShowPlot = "evince NeuronRates.eps";
 
 int main(int argc, char *argv[])
 {
-
+    const int nplotSteps = 10;
     //Network Configs           Wa , Wb, Wg, Wdelta, Wzeta,Wex, Winh
     int iNaiveWeights[]     = {100, 100,   0,   100, -100 , 20, -100};
     int iNaiveWeightssol2[] = {100, 100,-100,   100, -100 , 20, -100};
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 
     //Kenyon Cells /Input Pattern
-    float fRewardInputFq        = 10.0f; //Frequency of The R Input To The DAN
+    float fRewardInputFq        = 50.0f; //Frequency of The R Input To The DAN
     float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
     float fKCOscAmplitude       = 20.0f; //INput to KC - Amplitude of slow input Oscillation
     float fKCBaselineFq         = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
@@ -154,22 +154,25 @@ int main(int argc, char *argv[])
 
     ///ΜΒΟΝ Neuron Membrane Voltage
     ofiles["MBONLog"] = new std::ofstream(("MBONLog.csv"),ios::out );
-    (*ofiles["MBONLog"]) << "#t\tVm\tSpikeRate"  << endl;
+    (*ofiles["MBONLog"]) << "#t\tR\tVm\tSpikeRate"  << endl;
 
     ///DAN Neuron Membrane Voltage
     ofiles["DANLog"] = new std::ofstream(("DANLog.csv"),ios::out );
-    (*ofiles["DANLog"]) << "#t\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
+    (*ofiles["DANLog"]) << "#t\tR\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
 
     ///KC Neuron Membrane Voltage
     ofiles["KCLog"] = new std::ofstream(("KCLog.csv"),ios::out );
-    (*ofiles["KCLog"]) << "#t\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
+    (*ofiles["KCLog"]) << "#t\tER\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
 
 
 
 
     const uint uiSimulationTime = 100000;
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
-    testMBONTriadConfigA(iInputCount,iNaiveWeights,fRewardInputFq,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+
+    //scan R input from 0 to Max Reward Input
+    for (int r=0;r<nplotSteps;r++)
+        testMBONTriadConfigA(iInputCount,iNaiveWeights,r*fRewardInputFq/(float)nplotSteps,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
 
 
     //Plot Output
@@ -360,8 +363,8 @@ void testMBONTriadConfigA(int iInputCount,int * iWeights,float fRewardInputFq,fl
 
 
     cout << "---- Test MBON Triad KCs->DAN<->MBON Neuron  with Synapse Switch rule Gamma: " << gamma << endl;
-    cout << "Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
-
+    cout << "Sim Step Rate :" << IFFIRERATE_PERIOD << " timesteps/sec " << endl;
+    cout << "Reward Input :" << fRewardInputFq << " Hz." << endl;
 
     //Instantiate Network Neurons -Inputs to KC, KC, DAN MBON
     PoissonNeuron* pPsOSN[iInputCount];//Create Separate Poisson Sources for each KC afferent
@@ -458,9 +461,9 @@ void testMBONTriadConfigA(int iInputCount,int * iWeights,float fRewardInputFq,fl
 
         ///Log - Report Output
         //Log New Membrane Voltages
-        (*ofiles["MBONLog"]) << t <<"\t" << pIfnMBON->getMembraneVoltage() << "\t" << pIfnMBON->getFireRate()  << endl;
-        (*ofiles["DANLog"]) << t <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate() << "\t" <<  pPsR->getFireRate()  << endl;
-        (*ofiles["KCLog"]) << t <<"\t"<< pIfnKC->getMembraneVoltage() <<  "\t" << pIfnKC->getFireRate()  << "\t" <<  pPsOSN[0]->getFireRate() << endl;
+        (*ofiles["MBONLog"]) << t << "\t" << fRewardInputFq <<"\t" << pIfnMBON->getMembraneVoltage() << "\t" << pIfnMBON->getFireRate()  << endl;
+        (*ofiles["DANLog"])  << t << "\t" << fRewardInputFq <<"\t" << pIfnDAN->getMembraneVoltage() << "\t" << pIfnDAN->getFireRate() << "\t" <<  pPsR->getFireRate()  << endl;
+        (*ofiles["KCLog"])   << t << "\t" << fRewardInputFq <<"\t" << pIfnKC->getMembraneVoltage() <<  "\t" << pIfnKC->getFireRate()  << "\t" <<  pPsOSN[0]->getFireRate() << endl;
 
         //Log Spikes
         if (pIfnMBON->ActionPotentialOccured())

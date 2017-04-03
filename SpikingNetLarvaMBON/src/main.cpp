@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 
     //Kenyon Cells /Input Pattern
-    float fRewardInputFq        = 50.0f; //Frequency of The R Input To The DAN
+    float fRewardInputFq        = 80.0f; //Frequency of The R Input To The DAN
     float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
     float fKCOscAmplitude       = 20.0f; //INput to KC - Amplitude of slow input Oscillation
     float fKCBaselineFq         = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
@@ -172,7 +172,18 @@ int main(int argc, char *argv[])
 
     //scan R input from 0 to Max Reward Input
     for (int r=0;r<nplotSteps;r++)
-        testMBONTriadConfigA(iInputCount,iNaiveWeights,r*fRewardInputFq/(float)nplotSteps,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+    {
+        testMBONTriadConfigA(iInputCount,iPairedWeights,r*fRewardInputFq/(float)nplotSteps,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+
+        //Add Blank lines to output / Defines a new Datablock for gnuplot
+        //Log New Membrane Voltages
+        (*ofiles["MBONLog"])        << endl << endl;
+        (*ofiles["DANLog"])         << endl << endl;
+        (*ofiles["KCLog"])          << endl << endl;
+        (*ofiles["SpikeRasterLog"]) << endl << endl;
+
+    }
+
 
 
     //Plot Output

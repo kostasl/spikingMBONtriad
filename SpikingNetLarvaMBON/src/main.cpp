@@ -65,18 +65,31 @@ static const float tafDEP	= 0.020f;
 static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
 
-static const string strPlotCmd  = "gnuplot SpikeRaster.gplot";
-static const string strShowPlot = "evince NeuronRates.eps";
+static const string strPlotCmd      = "gnuplot SpikeRaster.gplot";
+static const string strShowPlot     = "evince NeuronRates.eps";
 
+///
+/// \brief main - process input params, run loop across R input strength for two circuit configurations - a baseline and a target one.
+/// It compares baseline to target by producing individual plots of each but also a ratio of responses
+/// \param argc
+/// \param argv
+/// \return exit
+///
 int main(int argc, char *argv[])
 {
-    const int nplotSteps = 10;
+    const int nplotSteps    = 10;
     //Network Configs           Wa , Wb, Wg, Wdelta, Wzeta,Wex, Winh
-    int iNaiveWeights[]     = {100, 100,   0,   100, -100 , 20, -100};
-    int iNaiveWeightssol2[] = {100, 100,-100,   100, -100 , 20, -100};
-    int iPairedWeights[]    = {100, 0 ,   0,    100, -100 , 20, -100};
+    int iNaiveWeights[]     = {100, 100,   0,   100, -100 ,  20, -100};
+    int iNaiveWeightssol2[] = {100, 100,-100,   100, -100 ,  20, -100};
+    int iPairedWeights[]    = {100, 0  ,   0,   200, -100 ,  20, -100}; //Should show Gating
+
+    // Wa-> 1,Wb -> 0,  Wg -> -1 ,Wd -> 2,  Wj -> -1//
+    int iPairedWeights2[]   = {100, 0 , -100,  200, -100 , 20, -100}; //Should show Gating 1/2 response
+
     int iUnpairedWeights[]  = {10,  30,   0,   -100, -10  , 20, -100};
 
+    int* iWeights          = iNaiveWeights;
+    string strTag = "Naive";
 
     //Kenyon Cells /Input Pattern
     float fRewardInputFq        = 80.0f; //Frequency of The R Input To The DAN
@@ -142,7 +155,9 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-    string sfilename(FilePath);
+    //string sfilename(FilePath);
+    //stringstream sfilename;
+
     // Set up output files
     ofiles["SynStrengthLog"] = new std::ofstream(("synsStrength.csv"),ios::out );
     //Iterator ologfile =
@@ -165,15 +180,13 @@ int main(int argc, char *argv[])
     (*ofiles["KCLog"]) << "#t\tER\tVm\tSpikeRate\tInput_SpikeRate"  << endl;
 
 
-
-
     const uint uiSimulationTime = 100000;
     //testIFNeuron(iNoExSynapses,iNoInhSynapses,IFSimulationTime);
 
     //scan R input from 0 to Max Reward Input
     for (int r=0;r<nplotSteps;r++)
     {
-        testMBONTriadConfigA(iInputCount,iPairedWeights,r*fRewardInputFq/(float)nplotSteps,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
+        testMBONTriadConfigA(iInputCount,iWeights,r*fRewardInputFq/(float)nplotSteps,fKCBaselineFq,fKCOscAmplitude,fKCOscPeriod, uiSimulationTime);
 
         //Add Blank lines to output / Defines a new Datablock for gnuplot
         //Log New Membrane Voltages
@@ -198,7 +211,21 @@ int main(int argc, char *argv[])
             cout << endl << "Show (evince) Returned :" << iret << endl;
 
         }
+
+        string strPlotExpName= "cp NeuronRates.eps NeuronRates_";
+        iret = system(strPlotExpName.append(strTag).append(".eps").c_str());
+
     }
+
+
+    string datFilename= "cp MBONLog.csv MBONLog_";
+    iret = system(datFilename.append(strTag).append(".csv").c_str());
+
+    datFilename= "cp DANLog.csv DANLog_";
+    iret = system(datFilename.append(strTag).append(".csv").c_str());
+
+    datFilename= "cp KCLog.csv KCLog_";
+    iret = system(datFilename.append(strTag).append(".csv").c_str());
 
 
    // Close all files

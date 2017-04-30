@@ -201,11 +201,11 @@ set output 'NeuronRates.eps'
 set yrange [0:100]
 set ylabel "Hz"
 #set autoscale y
-plot 'MBONLog.csv' u 1:($4) every 2:2 lt 1 linecolor 3 lw 2 w lines t 'MBON', \
-     'DANLog.csv' u 1:($4) every 2:2 lt 1 linecolor 1 w lines t 'DAN', \
-     'DANLog.csv' u 1:($5) every 2:2 lt 3 linecolor 1 w lines t 'R', \
-     'KCLog.csv' u 1:($4) every 2:2 lt 1 linecolor 7 lw 1  w lines t 'KC_0', \
-     'KCLog.csv' u 1:($5) every 2:2 lt 3 linecolor 7 lw 1  w lines t 'OSN_0';
+plot 'MBONLog.csv' u 1:($4) every 11:1 lt 1 linecolor 3 lw 2 w lines t 'MBON', \
+     'DANLog.csv' u 1:($4) every 11:1 lt 1 linecolor 1 w lines t 'DAN', \
+     'DANLog.csv' u 1:($5) every 11:1 lt 5 linecolor 2 w lines t 'R', \
+     'KCLog.csv' u 1:($4) every 11:1 lt 1 linecolor 7 lw 1  w lines t 'KC_0';
+#     'KCLog.csv' u 1:($5) every 11:1 lt 3 linecolor 7 lw 1  w lines t 'OSN_0';
 
 set output 'NeuronRatesZoom.eps'
 set yrange [0:100]

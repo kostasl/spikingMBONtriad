@@ -16,8 +16,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 ##Data files with columns:
 #t	R	Vm	SpikeRate
-list_of_files 	  = [('../../dat/MBONLog.csv','MBON'),('../../dat/DANLog.csv','DAN'),('../../dat/KCLog.csv','KC')]
-list_of_filesBase = [('../../dat/MBONLog_Naive.csv','MBON'),('../../dat/DANLog_Naive.csv','DAN'),('../../dat/KCLog_Naive.csv','KC')]
+list_of_files 	  = [('MBONLog.csv','MBON'),('DANLog.csv','DAN'),('KCLog.csv','KC')]
+list_of_filesBase = [('MBONLog_Naive.csv','MBON'),('DANLog_Naive.csv','DAN'),('KCLog_Naive.csv','KC')]
 
 #Report Files being Opened
 for filename, label in list_of_files:
@@ -93,12 +93,13 @@ ax.legend([handle for i,handle in enumerate(handles) if i in display],
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(111)
 ax2.plot(rates,dataGain)
-ax2.axis([0, 100, 0, 2.0])
+ax2.axis([0, 200, 0, 2.0])
+plt.title('Gain Learned/Naive Mbon response for different Reward (R) input ')
 
 plt.show()
 
 # Initialize the pdf file
-pp = PdfPages('multiFig.pdf')
+pp = PdfPages('neuralTriad.pdf')
 
 # Save the figure to the file
 pp.savefig(fig)

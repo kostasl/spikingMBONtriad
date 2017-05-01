@@ -65,8 +65,8 @@ static const float tafDEP	= 0.020f;
 static const int nPOT	= 1; //Change to 1 for Poisson Neuron Test
 static const int nDEP	= 1;
 
-static const string strPlotCmd      = "gnuplot SpikeRaster.gplot";
-static const string strShowPlot     = "evince NeuronRates.eps";
+static const string strPlotCmd      = "python plot.py";
+static const string strShowPlot     = "evince neuralTriad.pdf";
 
 ///
 /// \brief main - process input params, run loop across R input strength for two circuit configurations - a baseline and a target one.
@@ -78,28 +78,30 @@ static const string strShowPlot     = "evince NeuronRates.eps";
 int main(int argc, char *argv[])
 {
     const int nplotSteps    = 10;
+    //                        K->D,K->M,M->D, D->M,  D->K //Wex : R->D & OSN->KC
     //Network Configs           Wa , Wb, Wg, Wdelta, Wzeta,Wex, Winh
-    int iNaiveWeights[]     = {100, 100,   0,   100, -100 ,  20, -100};
+    int iNaiveWeights[]     = {100, 100,   0,   100, -100 ,  100, -100};
     int iNaiveWeightssol2[] = {100, 100,-100,   100, -100 ,  20, -100};
     int iPairedWeights[]    = {100, 0  ,   0,   200, -100 ,  20, -100}; //Should show Gating
+    int iFwdInhibWeights[]  = {0  , 100,   0,  -100, -100 ,  100, -100}; //Should show Gating
 
     // Wa-> 1,Wb -> 0,  Wg -> -1 ,Wd -> 2,  Wj -> -1//
     int iPairedWeights2[]   = {100, 0 , -100,  200, -100 , 20, -100}; //Should show Gating 1/2 response
 
     int iUnpairedWeights[]  = {10,  30,   0,   -100, -10  , 20, -100};
 
-    int* iWeights          = iPairedWeights;
-    string strTag = "Paired";
+    int* iWeights          = iFwdInhibWeights;
+    string strTag = "FwdInh"; //Set to "Naive" to Create Baseline Data "FwdInh"
 
     //Kenyon Cells /Input Pattern
-    float fRewardInputFq        = 80.0f; //Frequency of The R Input To The DAN
+    float fRewardInputFq        = 200.0f; //Frequency of The R Input To The DAN
     float fKCOscPeriod          = 10.0f; //INput to KC: Period of Slow input-Neuron Oscillation
     float fKCOscAmplitude       = 20.0f; //INput to KC - Amplitude of slow input Oscillation
     float fKCBaselineFq         = 40.0f; //Baseline Spiking Rate of KC input Neuron Ontop Of Which the Oscillating one rides
-    const int iInputCount       = 10;
+    const int iInputCount       = 1;
 
     bool bflagPlot = true; //Produce Output plot
-    bool bflagShow = true; //Show / display output file via doc. viewer
+    bool bflagShow = false; //Show / display output file via doc. viewer
 
     int opt;
     //Process command line options //qmljsdebugger=port:43543,block"
@@ -204,7 +206,7 @@ int main(int argc, char *argv[])
     if (bflagPlot)
     {
         iret = system(strPlotCmd.c_str());
-        cout << endl << "Gnuplot Returned :" << iret << endl;
+        cout << endl << "plot Returned :" << iret << endl;
         if (bflagShow)
         {
             iret = system(strShowPlot.c_str());
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
 
 
 /// \brief Instantiates N poisson excitatory neurons feeding onto an IF neuron , with no plasticity
-/// \returns Exports csv files of a spike raster and a csv with the IFs Membrane voltage - Calls gnuplot and generates
+/// \returns Exports csv files of a spike raster and a csv with the IFs Membrane voltage - Calls plot script and generates
 /// plots in the dat subfolder
 void testIFNeuron(int iNoExSynapses,int iNoInhSynapses,uint uiSimulationTime)
 {

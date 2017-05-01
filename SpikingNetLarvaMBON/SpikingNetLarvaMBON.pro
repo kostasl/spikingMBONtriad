@@ -48,3 +48,6 @@ HEADERS += \
     src/synapseSW.h \
     src/isynapse.h \
     src/isynapseensemble.h
+
+DISTFILES += \
+    dat/plot.py

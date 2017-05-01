@@ -88,8 +88,8 @@ int main(int argc, char *argv[])
 
     int iUnpairedWeights[]  = {10,  30,   0,   -100, -10  , 20, -100};
 
-    int* iWeights          = iNaiveWeights;
-    string strTag = "Naive";
+    int* iWeights          = iPairedWeights;
+    string strTag = "Paired";
 
     //Kenyon Cells /Input Pattern
     float fRewardInputFq        = 80.0f; //Frequency of The R Input To The DAN

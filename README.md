@@ -1,5 +1,6 @@
 # spikingMBONtriad
 Konstantinos Lagogiannis 
+work in progress...
 
 # Description
 Custom spiking neuron code used as a framework to research and validate hypothesis on learning and gating in Drosophila Larvae.

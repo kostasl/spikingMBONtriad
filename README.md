@@ -3,7 +3,8 @@ Konstantinos Lagogiannis
 work in progress...
 
 # Description
-Custom spiking neuron code used as a framework to research and validate hypothesis on learning and gating in Drosophila Larvae.
+Custom spiking neuron code used as a framework to research and validate hypothesis on neurobiology and behaviour of learning and recall in Drosophila Larvae.
+
 
 
 
